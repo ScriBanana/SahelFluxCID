@@ -9,35 +9,44 @@ model SahelFlux
 import "ImportZoning.gaml"
 
 global {
-// landscape parameters
-	int maxCropBiomassContent <- 5;
-	int maxRangelandBiomassContent <- 5;
+//Simulation parameters
+	int visualUpdate <- 20;
+	float step <- 30.0 #minutes;
+
+	// landscape parameters
+	int maxCropBiomassContent <- 2;
+	int maxRangelandBiomassContent <- 10;
+
+	// Herds parameters
+	int nbHerdsInit <- 50;
+
+	// Initiation
+	init {
+		create herd number: nbHerdsInit;
+	}
+
 }
 
-grid cropland parent: landscape {
+grid landscape width: gridWidth height: gridHeight parallel: true {
+	string cellLU;
+	string cellLUSimple;
+	bool nonGrazable <- false;
+	int biomassContent;
+	int colorValue;
 
-	init {
-		if cellLU = "Rainfed crops" {
-			biomassContent <- rnd(maxCropBiomassContent);
-		} else if cellLU = "Wooded savannah" {
-			biomassContent <- rnd(maxRangelandBiomassContent);
-		} else {
-			biomassContent <- 0;
+	reflex updateColour when: !nonGrazable and every(visualUpdate) {
+		if cellLUSimple = "Cropland" {
+			color <- rgb(255 + (216 - 255) / maxCropBiomassContent * biomassContent, 255 + (232 - 255) / maxCropBiomassContent * biomassContent, 180);
+		} else if cellLUSimple = "Rangeland" {
+			color <-
+			rgb(200 + (101 - 200) / maxCropBiomassContent * biomassContent, 230 + (198 - 230) / maxCropBiomassContent * biomassContent, 180 + (110 - 180) / maxCropBiomassContent * biomassContent);
 		}
 
 	}
 
 }
 
-grid rangeland parent: landscape {
-
-	init {
-		biomassContent <- rnd(10);
-	}
-
-}
-
-species herd {
+species herd skills: [moving] {
 
 	aspect default {
 		draw square(2) color: #sandybrown;
@@ -46,10 +55,10 @@ species herd {
 }
 
 experiment simulation type: gui {
-	parameter "Grid layout" var: gridLayout <- testImg among: [testImg, zoningReduitAudouin15Diohine, zoningAudouin15Barry, zoningAudouin15Diohine]; // Marche malgré l'exception.
+	parameter "Grid layout" var: gridLayout <- testImg among: [testImg, zoningReduitAudouin15Diohine]; //, zoningAudouin15Barry, zoningAudouin15Diohine]; // Marche malgré l'exception.
 	output {
 		display visual1 type: java2D {
-			grid landscape border: #lightgrey;
+			grid landscape;
 			species herd;
 		}
 
