@@ -6,21 +6,25 @@
 */
 model SahelFlux
 
+import "ImportZoning.gaml"
+
 global {
-
-	init {
-	}
-
-}
-
-grid landscape {
-	int biomassContent;
+// landscape parameters
+	int maxCropBiomassContent <- 5;
+	int maxRangelandBiomassContent <- 5;
 }
 
 grid cropland parent: landscape {
 
 	init {
-		biomassContent <- rnd(2);
+		if cellLU = "Rainfed crops" {
+			biomassContent <- rnd(maxCropBiomassContent);
+		} else if cellLU = "Wooded savannah" {
+			biomassContent <- rnd(maxRangelandBiomassContent);
+		} else {
+			biomassContent <- 0;
+		}
+
 	}
 
 }
@@ -42,6 +46,7 @@ species herd {
 }
 
 experiment simulation type: gui {
+	parameter "Grid layout" var: gridLayout <- testImg among: [testImg, zoningReduitAudouin15Diohine, zoningAudouin15Barry, zoningAudouin15Diohine]; // Marche malgré l'exception.
 	output {
 		display visual1 type: java2D {
 			grid landscape border: #lightgrey;
