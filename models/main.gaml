@@ -6,8 +6,10 @@
 */
 model SahelFlux
 
-import "ImportZoning.gaml"
-
+import "ImportZoning.gaml" // Sets the grid land uses according to a raster.
+import "StockFlows.gaml" // Soil biophysical processes.
+import "HerdsBehaviour.gaml" // Herds behaviour and movement.
+import "ExperimentRun.gaml" // Experiment file
 global {
 //Simulation parameters
 	float step <- 30.0 #minutes;
@@ -15,16 +17,8 @@ global {
 	float stockCUpdateFreq <- 1.0 #day;
 
 	// landscape parameters
-	int maxCropBiomassContent <- 2;
-	int maxRangelandBiomassContent <- 10;
-
-	// Biophysical parameters
-	float propLabileCFixed <- 0.005; // A PARAM
-	float propLabileCMineralised <- 0.05; // A PARAM
-	float propStableCMineralised <- 0.001; // A PARAM !!SP!!
-
-	// Herds parameters
-	int nbHerdsInit <- 50;
+	float maxCropBiomassContent <- 2.0;
+	float maxRangelandBiomassContent <- 10.0;
 
 	// Initiation
 	init {
@@ -70,20 +64,60 @@ global {
 		}
 
 		create herd number: nbHerdsInit;
+
+		// Paddock instantiation
+		int newParc <- 0;
+		int radiusIncrement <- 0;
+		loop while: newParc < nbHerdsInit {
+			loop cell over: shuffle(landscape where (each distance_to centroid(world) <= (sqrt(nbHerdsInit) + radiusIncrement) and each.cellLUSimple = "Cropland" and
+			each.overlappingPaddock = nil)) {
+				if empty((cell neighbors_at parcelSize where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
+					if newParc < nbHerdsInit {
+						create nightPaddock {
+							ask one_of(herd where (each.myPaddock = nil)) {
+								self.myPaddock <- myself;
+								myself.myHerd <- self;
+							}
+
+							myOriginCell <- cell;
+							myOriginCell.overlappingPaddock <- self;
+							location <- myOriginCell.location;
+							ask (myOriginCell neighbors_at parcelSize) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
+								self.overlappingPaddock <- myself;
+								myself.myCells <+ self;
+							}
+
+						}
+
+						newParc <- newParc + 1;
+					} else {
+						break;
+					}
+
+				}
+
+			}
+
+			radiusIncrement <- radiusIncrement + 1;
+		}
+
 	}
 
 }
 
-grid landscape width: gridWidth height: gridHeight parallel: true {
+grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 
 // Land use
 	string cellLU;
 	string cellLUSimple;
 	bool nonGrazable <- false;
 
+	// Parcels
+	nightPaddock overlappingPaddock <- nil;
+
 	// Biomass and nutrients
 	stockFlowMecanisms myStockFlowMecanisms;
-	int biomassContent;
+	float biomassContent;
 
 	reflex updateColour when: !nonGrazable and every(visualUpdate) {
 		if cellLUSimple = "Cropland" {
@@ -97,77 +131,15 @@ grid landscape width: gridWidth height: gridHeight parallel: true {
 
 }
 
-species stockFlowMecanisms parallel: true { // Likely more efficient than with a 'reflex when: !nonGrazable' in the grid.
-	landscape myPlot;
-	float soilNitrogenContent;
-	float plantNitrogenContent;
-
-	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
-	float soilCInput <- 0.1; // A PARAM
-	float labileCStock <- 2.0; // A PARAM
-	float stableCStock <- 5.0; // A PARAM
-	float totalCStock <- labileCStock + stableCStock;
-
-	reflex updateCStocks when: every(stockCUpdateFreq) {
-		float labileCStockBuffer <- labileCStock;
-		labileCStock <- labileCStockBuffer * (1 - propLabileCMineralised - propLabileCFixed) + soilCInput;
-		stableCStock <- stableCStock * (1 - propStableCMineralised) + labileCStockBuffer * propLabileCFixed;
-		totalCStock <- labileCStock + stableCStock;
-	}
-
-	aspect carbonStock {
-		location <- myPlot.location;
-		float carbonColourValue <- 255 * (1 - 1 / exp(10 - totalCStock));
-		rgb carbonColor <- rgb(carbonColourValue);
-		draw square(1) color: carbonColor;
-	}
-
-	aspect nitrogenStock {
-	}
-
-}
-
-species herd skills: [moving] {
-
-	reflex herdMovement {
-		do wander;
-	}
+species nightPaddock {
+	landscape myOriginCell;
+	list<landscape> myCells;
+	herd myHerd;
 
 	aspect default {
-		draw square(2) color: #sandybrown;
-	}
-
-}
-
-grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
-
-experiment simulation type: gui {
-	parameter "Grid layout" var: gridLayout among: [testImg2, testImg, zoningReduitAudouin15Diohine]; //, zoningAudouin15Barry, zoningAudouin15Diohine]; // Marche malgré l'exception.
-	output {
-		display mainDisplay type: java2D {
-			grid landscape;
-			species herd;
-		}
-
-		display carbonDisplay type: java2D refresh: every(visualUpdate) {
-			grid secondaryGrid border: #lightgrey;
-			species stockFlowMecanisms aspect: carbonStock;
-		}
-
-		display plantBiomassChart refresh: every(visualUpdate) {
-			chart "Total plant biomass evolution" type: series {
-				data "Plant biomass" value: landscape sum_of (each.biomassContent);
-			}
-
-		}
-
-		display carbonStocksChart refresh: every(visualUpdate) {
-			chart "Soil organic carbon evolution" type: series {
-				data "Total stock" value: stockFlowMecanisms sum_of (each.totalCStock);
-				data "Labile stock" value: stockFlowMecanisms sum_of (each.labileCStock);
-				data "Stable stock" value: stockFlowMecanisms sum_of (each.stableCStock);
-			}
-
+		draw square(0.5) color: myHerd.herdColour;
+		ask myCells {
+			draw square(1) color: #transparent border: myself.myHerd.herdColour;
 		}
 
 	}

@@ -1,5 +1,6 @@
 /**
 * Name: SupportFunctions
+* In: SahelFlux
 * Various support functions. 
 * Author: AS
 * Tags: 

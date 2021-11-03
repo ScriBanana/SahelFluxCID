@@ -1,12 +1,12 @@
 /**
 * Name: ImportZoning
+* In: SahelFlux
 * Imports rasters from Audoin's papers and classifies pixels with their land use.
 * Author: AS
 * Tags: 
 */
 model ImportZoning
 
-import "main.gaml"
 import "SupportFunctions.gaml"
 
 global {
@@ -21,6 +21,17 @@ global {
 	// Grid parameters
 	int gridHeight <- gridLayout.contents.rows;
 	int gridWidth <- gridLayout.contents.columns;
+
+	// Spatial units
+	float parcelSize <- 1.5; // !! Von Neumann;  100.0 #m;
+	init {
+		if gridLayout = zoningReduitAudouin15Diohine {
+			geometry shape <- rectangle(5150 #m, 5800 #m);
+		} else {
+			geometry shape <- rectangle(5 #km, 5 #km);
+		}
+
+	}
 
 	// Landscape units definition (from source)
 	list<string> LUList <- ["Dwellings", "Lowlands", "Ponds", "Wooded savannah", "Fallows", "Rainfed crops", "Gardens"];
