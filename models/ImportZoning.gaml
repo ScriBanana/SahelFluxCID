@@ -23,15 +23,18 @@ global {
 	int gridWidth <- gridLayout.contents.columns;
 
 	// Spatial units
-	float parcelSize <- 1.5; // !! Von Neumann;  100.0 #m;
-	init {
-		if gridLayout = zoningReduitAudouin15Diohine {
-			geometry shape <- rectangle(5150 #m, 5800 #m);
-		} else {
-			geometry shape <- rectangle(5 #km, 5 #km);
-		}
-
-	}
+	geometry shape <- square(5 #km);
+	float cellHeight <- shape.height / gridHeight;
+	float cellWidth <- shape.width / gridWidth;
+	float parcelSize <- 50.0 #m; // @!! Von Neumann;  100.0 #m;
+	//	init {
+	//		if gridLayout = zoningReduitAudouin15Diohine {
+	//			geometry shape <- rectangle(5150 #m, 5800 #m);
+	//		} else {
+	//			geometry shape <- rectangle(5 #km, 5 #km);
+	//		}
+	//
+	//	}
 
 	// Landscape units definition (from source)
 	list<string> LUList <- ["Dwellings", "Lowlands", "Ponds", "Wooded savannah", "Fallows", "Rainfed crops", "Gardens"];

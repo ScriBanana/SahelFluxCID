@@ -12,9 +12,9 @@ import "main.gaml"
 global {
 
 // Biophysical parameters
-	float propLabileCFixed <- 0.005; // A PARAM ! selon LU?
-	float propLabileCMineralised <- 0.05; // A PARAM
-	float propStableCMineralised <- 0.001; // A PARAM !!SP!!
+	float propLabileCFixed <- 0.005; //@ A PARAM ! selon LU?
+	float propLabileCMineralised <- 0.05; //@ A PARAM
+	float propStableCMineralised <- 0.001; //@ A PARAM !!SP!!
 
 }
 
@@ -24,9 +24,9 @@ species stockFlowMecanisms parallel: true { // Likely more efficient than with a
 	float plantNitrogenContent;
 
 	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
-	float soilCInput <- 0.1; // A PARAM
-	float labileCStock <- 2.0; // A PARAM
-	float stableCStock <- 5.0; // A PARAM
+	float soilCInput <- 0.1; //@ A PARAM
+	float labileCStock <- 2.0; //@A PARAM
+	float stableCStock <- 5.0; //@ A PARAM
 	float totalCStock <- labileCStock + stableCStock;
 
 	reflex updateCStocks when: every(stockCUpdateFreq) {
@@ -40,7 +40,7 @@ species stockFlowMecanisms parallel: true { // Likely more efficient than with a
 		location <- myPlot.location;
 		float carbonColourValue <- 255 * (1 - 1 / exp(10 - totalCStock)); // Pretty sigmoid; parameters a bit random.
 		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
-		draw square(1) color: carbonColor;
+		draw square(cellWidth) color: carbonColor;
 	}
 
 	aspect nitrogenStock {

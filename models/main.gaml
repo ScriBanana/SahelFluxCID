@@ -67,29 +67,39 @@ global {
 
 		// Paddock instantiation
 		int newParc <- 0;
-		int radiusIncrement <- 0;
+		float radiusIncrement <- 0.0;
 		loop while: newParc < nbHerdsInit {
-			loop cell over: shuffle(landscape where (each distance_to centroid(world) <= (sqrt(nbHerdsInit) + radiusIncrement) and each.cellLUSimple = "Cropland" and
+			loop cell over: shuffle(landscape where (each distance_to centroid(world) <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
 			each.overlappingPaddock = nil)) {
 				if empty((cell neighbors_at parcelSize where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
 					if newParc < nbHerdsInit {
 						create nightPaddock {
-							ask one_of(herd where (each.myPaddock = nil)) {
-								self.myPaddock <- myself;
-								myself.myHerd <- self;
-							}
 
+						// Plots attribution
 							myOriginCell <- cell;
 							myOriginCell.overlappingPaddock <- self;
 							location <- myOriginCell.location;
 							ask (myOriginCell neighbors_at parcelSize) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
 								self.overlappingPaddock <- myself;
 								myself.myCells <+ self;
+								myself.nightsPerCellMap <+ self::0;
 							}
 
+							// Herds attribution
+							ask one_of(herd where (each.myPaddock = nil)) {
+								self.myPaddock <- myself;
+								myself.myHerd <- self;
+							}
+
+							myHerd.currentSleepSpot <- one_of(self.myCells);
+							myHerd.location <- myHerd.currentSleepSpot.location;
 						}
 
 						newParc <- newParc + 1;
+						if newParc mod 10 = 0 {
+							write "Paddocks placed : " + newParc;
+						}
+
 					} else {
 						break;
 					}
@@ -98,7 +108,8 @@ global {
 
 			}
 
-			radiusIncrement <- radiusIncrement + 1;
+			radiusIncrement <- radiusIncrement + cellWidth;
+			write "Radius increment : " + radiusIncrement;
 		}
 
 	}
@@ -134,12 +145,13 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 species nightPaddock {
 	landscape myOriginCell;
 	list<landscape> myCells;
+	map<landscape, int> nightsPerCellMap;
 	herd myHerd;
 
 	aspect default {
-		draw square(0.5) color: myHerd.herdColour;
+		draw square(cellWidth / 2) color: myHerd.herdColour;
 		ask myCells {
-			draw square(1) color: #transparent border: myself.myHerd.herdColour;
+			draw square(cellWidth) color: #transparent border: myself.myHerd.herdColour;
 		}
 
 	}
