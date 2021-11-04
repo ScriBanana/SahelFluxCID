@@ -26,7 +26,7 @@ global {
 	geometry shape <- square(5 #km);
 	float cellHeight <- shape.height / gridHeight;
 	float cellWidth <- shape.width / gridWidth;
-	float parcelSize <- 50.0 #m; // @!! Von Neumann;  100.0 #m;
+	float parcelSize <- 50.0 #m; // TODO!! Von Neumann;  100.0 #m;
 	//	init {
 	//		if gridLayout = zoningReduitAudouin15Diohine {
 	//			geometry shape <- rectangle(5150 #m, 5800 #m);

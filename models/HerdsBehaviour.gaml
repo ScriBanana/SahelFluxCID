@@ -10,17 +10,20 @@ model HerdsBehaviour
 import "main.gaml"
 
 global {
-	int nbHerdsInit <- 50; //@ Baser sur Myriam
+	int nbHerdsInit <- 50; //TODO Baser sur Myriam
 	// Behaviour
 	int wakeUpTime <- 8; // Time of the day at which animals are released in the morning (Own accelerometer data)
 	int eveningTime <- 19; // Time of the day at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
+	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
+	float goodSpotThreshold <- 0.1; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
+
 	// Zootechnical data
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
 	float fiveMinIntake <- 0.06; // Biomass eaten per 5 min (complètement random)
 
 	// Paddocking
-	int maxNbNightsPerCell <- 4; // Field data; @ A PARAM !
+	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM !
 }
 
 species herd control: fsm skills: [moving] {
@@ -31,22 +34,17 @@ species herd control: fsm skills: [moving] {
 	landscape currentSleepSpot;
 
 	// FSM behaviour
-	// Sleep time in between wakeUpTime and eveningTime
+	// Sleep time in between globals wakeUpTime and eveningTime
 	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2) every (#hour);
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumed);
-	landscape currentGrazingCell <- one_of(landscape where !each.nonGrazable);
+	landscape targetCell <- one_of(landscape where !each.nonGrazable);
 	bool isInGoodSpot <- false;
 
 	// FSM
 	state isGoingToSleepSpot {
-		enter {
-			int sleepTimeAwarenessMoment <- cycle; //@ Timer pour voir
-		}
-
 		do goto target: currentSleepSpot speed: herdSpeed;
-		transition to: isSleepingInPaddock when: ((cycle - sleepTimeAwarenessMoment) > 14); // when: location
-
+		transition to: isSleepingInPaddock when: location overlaps currentSleepSpot.location;
 	}
 
 	state isSleepingInPaddock initial: true {
@@ -60,43 +58,51 @@ species herd control: fsm skills: [moving] {
 			if myPaddock.nightsPerCellMap[currentSleepSpot] > maxNbNightsPerCell {
 				currentSleepSpot <- one_of(myPaddock.nightsPerCellMap.pairs where (each.value < maxNbNightsPerCell)).key;
 			}
-			///////@ GERER LE MOMENT OU TOUT EST FULL!!
+			///////TODO GERER LE MOMENT OU TOUT EST FULL!!
 		}
 
 	}
 
 	state isChangingSite {
 		enter {
-			currentGrazingCell <- one_of(landscape where !each.nonGrazable); // @A affiner selon le DOE
-			int goodSpotOMeter <- cycle;
+			targetCell <- one_of(landscape where (each.cellLUSimple = "Rangeland")); // TODO A affiner selon le DOE
 		}
 
-		do goto target: currentGrazingCell speed: herdSpeed;
-		isInGoodSpot <- (cycle - goodSpotOMeter) > 5;
+		do checkSpotQuality;
+
+		//do wander amplitude: 90.0;
+		do goto target: targetCell speed: herdSpeed;
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isGrazing when: isInGoodSpot;
 	}
 
 	state isGrazing {
 		enter {
+			landscape currentGrazingCell <- one_of(landscape overlapping self);
 		}
 
-		satietyMeter <- satietyMeter + fiveMinIntake;
+		list<landscape> cellsAround <- checkSpotQuality();
+		if currentGrazingCell.biomassContent < cellsAround mean_of each.biomassContent { // TODO Bon, à voir...
+			landscape juiciestCellAround <- shuffle(cellsAround) with_max_of (each.biomassContent);
+			currentGrazingCell <- juiciestCellAround;
+		}
+
+		do goto target: currentGrazingCell;
+		//satietyMeter <- satietyMeter + fiveMinIntake; TODO
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isResting when: !hungry;
 		transition to: isChangingSite when: !isInGoodSpot;
 	}
 
 	state isResting {
-		enter {
-		}
-
 		transition to: isGoingToSleepSpot when: sleepTime;
-		transition to: isChangingSite when: !isInGoodSpot;
 		transition to: isGrazing when: hungry;
 	}
 
-	reflex checkSpotQuality when: state in ["isChangingSite", "isGrazing"] {
+	list<landscape> checkSpotQuality { // and return visible cells
+		list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
+		isInGoodSpot <- cellsAround sum_of each.biomassContent > goodSpotThreshold ? true : false;
+		return cellsAround;
 	}
 
 	aspect default {

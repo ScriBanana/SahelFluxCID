@@ -12,9 +12,9 @@ import "main.gaml"
 global {
 
 // Biophysical parameters
-	float propLabileCFixed <- 0.005; //@ A PARAM ! selon LU?
-	float propLabileCMineralised <- 0.05; //@ A PARAM
-	float propStableCMineralised <- 0.001; //@ A PARAM !!SP!!
+	float propLabileCFixed <- 0.005; //TODO A PARAM ! selon LU?
+	float propLabileCMineralised <- 0.05; //TODO A PARAM
+	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
 
 }
 
@@ -24,9 +24,9 @@ species stockFlowMecanisms parallel: true { // Likely more efficient than with a
 	float plantNitrogenContent;
 
 	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
-	float soilCInput <- 0.1; //@ A PARAM
-	float labileCStock <- 2.0; //@A PARAM
-	float stableCStock <- 5.0; //@ A PARAM
+	float soilCInput <- 0.1; //TODO A PARAM
+	float labileCStock <- 2.0; //TODOA PARAM
+	float stableCStock <- 5.0; //TODO A PARAM
 	float totalCStock <- labileCStock + stableCStock;
 
 	reflex updateCStocks when: every(stockCUpdateFreq) {
