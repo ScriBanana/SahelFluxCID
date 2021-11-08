@@ -17,11 +17,10 @@ experiment simulation type: gui {
 			species herd;
 		}
 
-		display carbonDisplay type: java2D refresh: every(visualUpdate) {
-			grid secondaryGrid border: #lightgrey;
-			species stockFlowMecanisms aspect: carbonStock;
-		}
-
+		//		display carbonDisplay type: java2D refresh: every(visualUpdate) {
+		//			grid secondaryGrid border: #lightgrey;
+		//			species stockFlowMecanisms aspect: carbonStock;
+		//		}
 		display plantBiomassChart refresh: every(visualUpdate) {
 			chart "Total plant biomass evolution" type: series {
 				data "Plant biomass" value: landscape sum_of (each.biomassContent);
@@ -29,14 +28,14 @@ experiment simulation type: gui {
 
 		}
 
-		display carbonStocksChart refresh: every(visualUpdate) {
-			chart "Soil organic carbon evolution" type: series {
-				data "Total stock" value: stockFlowMecanisms sum_of (each.totalCStock);
-				data "Labile stock" value: stockFlowMecanisms sum_of (each.labileCStock);
-				data "Stable stock" value: stockFlowMecanisms sum_of (each.stableCStock);
-			}
-
-		}
+		//		display carbonStocksChart refresh: every(visualUpdate) {
+		//			chart "Soil organic carbon evolution" type: series {
+		//				data "Total stock" value: stockFlowMecanisms sum_of (each.totalCStock);
+		//				data "Labile stock" value: stockFlowMecanisms sum_of (each.labileCStock);
+		//				data "Stable stock" value: stockFlowMecanisms sum_of (each.stableCStock);
+		//			}
+		//
+		//		}
 
 	}
 

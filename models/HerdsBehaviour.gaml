@@ -20,7 +20,7 @@ global {
 
 	// Zootechnical data
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
-	float fiveMinIntake <- 0.06; // Biomass eaten per 5 min (complètement random)
+	float intakeRate <- 0.36; // Biomass eaten per time step (complètement random)
 
 	// Paddocking
 	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
@@ -29,15 +29,18 @@ global {
 species herd control: fsm skills: [moving] {
 	rgb herdColour <- rnd_color(255);
 
-	// Paddocking
+	// Paddocking parameters
 	nightPaddock myPaddock <- nil;
 	landscape currentSleepSpot;
 
-	// FSM behaviour
-	// Sleep time in between globals wakeUpTime and eveningTime
-	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
+	// Grazing parameters
+	float biomassConsumed <- 0.0;
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumed);
+
+	// FSM parameters
+	// Sleep time in between globals wakeUpTime and eveningTime
+	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
 	landscape targetCell <- one_of(landscape where !each.nonGrazable);
 	bool isInGoodSpot <- false;
 
@@ -45,7 +48,7 @@ species herd control: fsm skills: [moving] {
 		speed <- herdSpeed;
 	}
 
-	// FSM
+	//// FSM behaviour ////
 	state isGoingToSleepSpot {
 		do goto target: currentSleepSpot;
 		transition to: isSleepingInPaddock when: location overlaps currentSleepSpot.location;
@@ -58,25 +61,7 @@ species herd control: fsm skills: [moving] {
 
 		transition to: isChangingSite when: !sleepTime;
 		exit {
-		// Change tile in the paddock parcel when maximum number of nights is reached.
-			myPaddock.nightsPerCellMap[currentSleepSpot] <- myPaddock.nightsPerCellMap[currentSleepSpot] + 1;
-
-			// When all tiles were occupied, reset the counter (TODO fit to reality)
-			if sum(myPaddock.nightsPerCellMap.values) = length(myPaddock.nightsPerCellMap) * maxNbNightsPerCell {
-				ask myPaddock {
-					self.nightsPerCellMap <- [];
-					ask myCells {
-						self.overlappingPaddock.nightsPerCellMap <+ self::0;
-					}
-
-				}
-
-			}
-
-			if myPaddock.nightsPerCellMap[currentSleepSpot] >= maxNbNightsPerCell {
-				currentSleepSpot <- one_of(myPaddock.nightsPerCellMap.pairs where (each.value < maxNbNightsPerCell)).key;
-			}
-			///////TODO GERER LE MOMENT OU TOUT EST FULL!!
+			do updatePaddock;
 		}
 
 	}
@@ -106,7 +91,7 @@ species herd control: fsm skills: [moving] {
 		}
 
 		do goto target: currentGrazingCell;
-		satietyMeter <- satietyMeter + fiveMinIntake;
+		do graze(currentGrazingCell);
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isResting when: !hungry;
 		transition to: isChangingSite when: !isInGoodSpot;
@@ -117,10 +102,45 @@ species herd control: fsm skills: [moving] {
 		transition to: isGrazing when: hungry;
 	}
 
+	//// Functions ////
 	list<landscape> checkSpotQuality { // and return visible cells
 		list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
 		isInGoodSpot <- cellsAround sum_of each.biomassContent > goodSpotThreshold ? true : false;
 		return cellsAround;
+	}
+
+	// Change tile in the paddock parcel when maximum number of nights is reached.
+	action updatePaddock {
+		myPaddock.nightsPerCellMap[currentSleepSpot] <- myPaddock.nightsPerCellMap[currentSleepSpot] + 1;
+
+		// When all tiles were occupied, reset the counter (TODO fit to reality)
+		if sum(myPaddock.nightsPerCellMap.values) = length(myPaddock.nightsPerCellMap) * maxNbNightsPerCell {
+			ask myPaddock {
+				self.nightsPerCellMap <- [];
+				ask myCells {
+					self.overlappingPaddock.nightsPerCellMap <+ self::0;
+				}
+
+			}
+
+		}
+
+		if myPaddock.nightsPerCellMap[currentSleepSpot] >= maxNbNightsPerCell {
+			currentSleepSpot <- one_of(myPaddock.nightsPerCellMap.pairs where (each.value < maxNbNightsPerCell)).key;
+		}
+
+	}
+
+	action graze (landscape cellToGraze) {
+		ask cellToGraze {
+			self.biomassContent <- self.biomassContent - intakeRate;
+		}
+
+		biomassConsumed <- biomassConsumed + intakeRate;
+		satietyMeter <- satietyMeter + intakeRate;
+	}
+
+	reflex excrete {
 	}
 
 	aspect default {

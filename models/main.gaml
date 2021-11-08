@@ -131,7 +131,7 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	stockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent;
 
-	reflex updateColour when: !nonGrazable and every(visualUpdate) {
+	reflex updateColour when: !nonGrazable {
 		if cellLUSimple = "Cropland" {
 			color <- rgb(255 + (216 - 255) / maxCropBiomassContent * biomassContent, 255 + (232 - 255) / maxCropBiomassContent * biomassContent, 180);
 		} else if cellLUSimple = "Rangeland" {

@@ -29,23 +29,22 @@ species stockFlowMecanisms parallel: true { // Likely more efficient than with a
 	float stableCStock <- 5.0; //TODO A PARAM
 	float totalCStock <- labileCStock + stableCStock;
 
-	reflex updateCStocks when: every(stockCUpdateFreq) {
-		float labileCStockBuffer <- labileCStock;
-		labileCStock <- labileCStockBuffer * (1 - propLabileCMineralised - propLabileCFixed) + soilCInput;
-		stableCStock <- stableCStock * (1 - propStableCMineralised) + labileCStockBuffer * propLabileCFixed;
-		totalCStock <- labileCStock + stableCStock;
-	}
-
-	aspect carbonStock {
-		location <- myPlot.location;
-		float carbonColourValue <- 255 * (1 - 1 / exp(10 - totalCStock)); // Pretty sigmoid; parameters a bit random.
-		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
-		draw square(cellWidth) color: carbonColor;
-	}
-
+	//	reflex updateCStocks when: every(stockCUpdateFreq) {
+	//		float labileCStockBuffer <- labileCStock;
+	//		labileCStock <- labileCStockBuffer * (1 - propLabileCMineralised - propLabileCFixed) + soilCInput;
+	//		stableCStock <- stableCStock * (1 - propStableCMineralised) + labileCStockBuffer * propLabileCFixed;
+	//		totalCStock <- labileCStock + stableCStock;
+	//	}
+	//
+	//	aspect carbonStock {
+	//		location <- myPlot.location;
+	//		float carbonColourValue <- 255 * (1 - 1 / exp(10 - totalCStock)); // Pretty sigmoid; parameters a bit random.
+	//		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
+	//		draw square(cellWidth) color: carbonColor;
+	//	}
 	aspect nitrogenStock {
 	}
 
 }
 
-grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
+//grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
