@@ -18,8 +18,8 @@ global {
 	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
 	float goodSpotThreshold <- 10.0; // TODO random pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
 
-	// Zootechnical data
-	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
+	// Zootechnical data TODO ramener à l'échelle du tpx!!
+	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg) TODO : bien en MS?
 	float intakeRate <- 0.36; // Biomass eaten per time step (TODO complètement random, voir Chirat?)
 	float digestionLength <- 10.0 #h; // TODO Duration of the digestion of biomass in the animals
 	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)

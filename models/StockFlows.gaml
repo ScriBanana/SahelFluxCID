@@ -18,6 +18,7 @@ global {
 //	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
 
 // Nitrogen
+	float vegetalBiomassNContent <- 0.5; // TODO sourcer (Coly un peu lackluster) et faire varier selon LU
 
 }
 
@@ -25,18 +26,33 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	landscape myPlot;
 
 	// Nitrogen
+	float lastNitrogenUpdateDate <- time;
 	float previousPeriodBiomass <- myPlot.biomassContent;
 
 	reflex updateNitrogenFlows when: every(nitrogenFlowsUpdateFreq) {
 	// Uptake
-		float lastPeriodUptake <- myPlot.biomassContent - previousPeriodBiomass;
+		float lastPeriodBMUptake <- myPlot.biomassContent - previousPeriodBiomass;
+		previousPeriodBiomass <- myPlot.biomassContent;
+		float lastPeriodNUptake <- lastPeriodBMUptake * vegetalBiomassNContent;
 
 		// Excretions
-		float lastPeriodIntake <- myPlot.depositedOMMap at 2.0;
+		float lastPeriodOMIntake <- 0.0;
+		loop OMDepositDate over: reverse(myPlot.depositedOMMap sort each) {
+			if OMDepositDate <= lastNitrogenUpdateDate {
+				break;
+			}
+
+			lastPeriodOMIntake <- lastPeriodOMIntake + myPlot.depositedOMMap at OMDepositDate;
+		}
+
+		float lastPeriodExcretionsNIntake;
+		float lastPeriodUrineNIntake;
+		float lastPeriodNIntake <- lastPeriodExcretionsNIntake + lastPeriodUrineNIntake;
 
 		// Atmospheric fixation
 
-		// Emissions
+		// Emissions : voir Myriam p.81
+		lastNitrogenUpdateDate <- time;
 	}
 
 	aspect nitrogenStock {
