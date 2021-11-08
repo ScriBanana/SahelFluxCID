@@ -1,7 +1,7 @@
 /**
 * Name: HerdsBehaviour
 * In: SahelFlux
-* Herd behaviours as a finite state machine, based on Zampaligré (2012)
+* Herd behaviours as a finite state machine, based on Zampaligré (2012), Gersie (2020), Wade (2016)
 * Author: AS
 * Tags: 
 */
@@ -16,11 +16,13 @@ global {
 	int eveningTime <- 19; // Time of the day at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
 	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
-	float goodSpotThreshold <- 10.0; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
+	float goodSpotThreshold <- 10.0; // TODO random pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
 
 	// Zootechnical data
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
-	float intakeRate <- 0.36; // Biomass eaten per time step (complètement random)
+	float intakeRate <- 0.36; // Biomass eaten per time step (TODO complètement random, voir Chirat?)
+	float digestionLength <- 10.0 #h; // TODO Duration of the digestion of biomass in the animals
+	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
 	// Paddocking
 	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
@@ -34,7 +36,7 @@ species herd control: fsm skills: [moving] {
 	landscape currentSleepSpot;
 
 	// Grazing parameters
-	float biomassConsumed <- 0.0;
+	map<float, float> chymeChunksMap;
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumed);
 
@@ -86,7 +88,7 @@ species herd control: fsm skills: [moving] {
 
 		list<landscape> cellsAround <- checkSpotQuality();
 		if currentGrazingCell.biomassContent < cellsAround mean_of each.biomassContent { // TODO Bon, à voir...
-			landscape juiciestCellAround <- shuffle(cellsAround) with_max_of (each.biomassContent);
+			landscape juiciestCellAround <- one_of(cellsAround with_max_of (each.biomassContent));
 			currentGrazingCell <- juiciestCellAround;
 		}
 
@@ -132,15 +134,20 @@ species herd control: fsm skills: [moving] {
 	}
 
 	action graze (landscape cellToGraze) {
+		float eatenBiomass <- intakeRate; // Adaptable if variable IIR are intruduced
 		ask cellToGraze {
-			self.biomassContent <- self.biomassContent - intakeRate;
+			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}
 
-		biomassConsumed <- biomassConsumed + intakeRate;
-		satietyMeter <- satietyMeter + intakeRate;
+		chymeChunksMap <+ time::eatenBiomass;
+		satietyMeter <- satietyMeter + eatenBiomass;
 	}
 
-	reflex excrete {
+	// Grange (2015), Wade (2016). Urine is computed in StockFlows.gaml
+	reflex excrete when: !empty(chymeChunksMap) and chymeChunksMap.keys[0] + digestionLength > time {
+		landscape currentCell <- one_of(landscape overlapping self);
+		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * ratioExcretionIngestion);
+		chymeChunksMap >- first(chymeChunksMap);
 	}
 
 	aspect default {

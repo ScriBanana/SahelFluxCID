@@ -12,23 +12,42 @@ import "main.gaml"
 global {
 
 // Biophysical parameters
-	float propLabileCFixed <- 0.005; //TODO A PARAM ! selon LU?
-	float propLabileCMineralised <- 0.05; //TODO A PARAM
-	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
+//// Carbon
+//	float propLabileCFixed <- 0.005; //TODO A PARAM ! selon LU?
+//	float propLabileCMineralised <- 0.05; //TODO A PARAM
+//	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
+
+// Nitrogen
 
 }
 
-species stockFlowMecanisms parallel: true { // Likely more efficient than with a 'reflex when: !nonGrazable' in the grid.
+species plotStockFlowMecanisms parallel: true { // Likely more efficient than with a 'reflex when: !nonGrazable' in the grid.
 	landscape myPlot;
-	float soilNitrogenContent;
-	float plantNitrogenContent;
 
-	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
-	float soilCInput <- 0.1; //TODO A PARAM
-	float labileCStock <- 2.0; //TODOA PARAM
-	float stableCStock <- 5.0; //TODO A PARAM
-	float totalCStock <- labileCStock + stableCStock;
+	// Nitrogen
+	float previousPeriodBiomass <- myPlot.biomassContent;
 
+	reflex updateNitrogenFlows when: every(nitrogenFlowsUpdateFreq) {
+	// Uptake
+		float lastPeriodUptake <- myPlot.biomassContent - previousPeriodBiomass;
+
+		// Excretions
+		float lastPeriodIntake <- myPlot.depositedOMMap at 2.0;
+
+		// Atmospheric fixation
+
+		// Emissions
+	}
+
+	aspect nitrogenStock {
+	}
+
+	//	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
+	//	float soilCInput <- 0.1; //TODO A PARAM
+	//	float labileCStock <- 2.0; //TODO A PARAM
+	//	float stableCStock <- 5.0; //TODO A PARAM
+	//	float totalCStock <- labileCStock + stableCStock;
+	//
 	//	reflex updateCStocks when: every(stockCUpdateFreq) {
 	//		float labileCStockBuffer <- labileCStock;
 	//		labileCStock <- labileCStockBuffer * (1 - propLabileCMineralised - propLabileCFixed) + soilCInput;
@@ -42,9 +61,7 @@ species stockFlowMecanisms parallel: true { // Likely more efficient than with a
 	//		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
 	//		draw square(cellWidth) color: carbonColor;
 	//	}
-	aspect nitrogenStock {
-	}
 
 }
 
-//grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
+grid secondaryGrid width: gridWidth height: gridHeight parallel: true;

@@ -15,10 +15,11 @@ global {
 	float step <- 30.0 #minutes;
 	float visualUpdate <- 1.0 #week; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
+	float nitrogenFlowsUpdateFreq <- 1.0 #day;
 
 	// landscape parameters
-	float maxCropBiomassContent <- 2.0;
-	float maxRangelandBiomassContent <- 10.0;
+	float maxCropBiomassContent <- 2.0; // TODO doit être en matière sèche
+	float maxRangelandBiomassContent <- 10.0; // TODO doit être en matière sèche
 
 	// Initiation
 	init {
@@ -38,7 +39,7 @@ global {
 				cell.color <- rgb(255 + (216 - 255) / maxCropBiomassContent * cell.biomassContent, 255 + (232 - 255) / maxCropBiomassContent * cell.biomassContent, 180);
 
 				// Link with own nutrientStocks instance
-				create stockFlowMecanisms with: [myPlot::cell] {
+				create plotStockFlowMecanisms with: [myPlot::cell] {
 					cell.myStockFlowMecanisms <- self;
 				}
 
@@ -51,7 +52,7 @@ global {
 				rgb(200 + (101 - 200) / maxCropBiomassContent * cell.biomassContent, 230 + (198 - 230) / maxCropBiomassContent * cell.biomassContent, 180 + (110 - 180) / maxCropBiomassContent * cell.biomassContent);
 
 				// Link with own nutrientStocks instance
-				create stockFlowMecanisms with: [myPlot::cell] {
+				create plotStockFlowMecanisms with: [myPlot::cell] {
 					cell.myStockFlowMecanisms <- self;
 				}
 
@@ -128,9 +129,9 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	nightPaddock overlappingPaddock <- nil;
 
 	// Biomass and nutrients
-	stockFlowMecanisms myStockFlowMecanisms;
+	plotStockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent;
-
+	map<float, float> depositedOMMap; // TODO la cropper?
 	reflex updateColour when: !nonGrazable {
 		if cellLUSimple = "Cropland" {
 			color <- rgb(255 + (216 - 255) / maxCropBiomassContent * biomassContent, 255 + (232 - 255) / maxCropBiomassContent * biomassContent, 180);
