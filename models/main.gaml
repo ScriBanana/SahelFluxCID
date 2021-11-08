@@ -13,7 +13,7 @@ import "ExperimentRun.gaml" // Experiment file
 global {
 //Simulation parameters
 	float step <- 30.0 #minutes;
-	float visualUpdate <- 1.0 #day;
+	float visualUpdate <- 1.0 #week; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
 
 	// landscape parameters
@@ -78,6 +78,7 @@ global {
 						// Plots attribution
 							myOriginCell <- cell;
 							myOriginCell.overlappingPaddock <- self;
+							self.myCells <+ myOriginCell;
 							location <- myOriginCell.location;
 							ask (myOriginCell neighbors_at parcelSize) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
 								self.overlappingPaddock <- myself;

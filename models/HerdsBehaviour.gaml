@@ -16,7 +16,7 @@ global {
 	int eveningTime <- 19; // Time of the day at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
 	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
-	float goodSpotThreshold <- 0.1; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
+	float goodSpotThreshold <- 10; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
 
 	// Zootechnical data
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
@@ -35,15 +35,19 @@ species herd control: fsm skills: [moving] {
 
 	// FSM behaviour
 	// Sleep time in between globals wakeUpTime and eveningTime
-	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2) every (#hour);
+	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumed);
 	landscape targetCell <- one_of(landscape where !each.nonGrazable);
 	bool isInGoodSpot <- false;
 
+	init {
+		speed <- herdSpeed;
+	}
+
 	// FSM
 	state isGoingToSleepSpot {
-		do goto target: currentSleepSpot speed: herdSpeed;
+		do goto target: currentSleepSpot;
 		transition to: isSleepingInPaddock when: location overlaps currentSleepSpot.location;
 	}
 
@@ -54,8 +58,22 @@ species herd control: fsm skills: [moving] {
 
 		transition to: isChangingSite when: !sleepTime;
 		exit {
+		// Change tile in the paddock parcel when maximum number of nights is reached.
 			myPaddock.nightsPerCellMap[currentSleepSpot] <- myPaddock.nightsPerCellMap[currentSleepSpot] + 1;
-			if myPaddock.nightsPerCellMap[currentSleepSpot] > maxNbNightsPerCell {
+
+			// When all tiles were occupied, reset the counter (TODO fit to reality)
+			if sum(myPaddock.nightsPerCellMap.values) = length(myPaddock.nightsPerCellMap) * maxNbNightsPerCell {
+				ask myPaddock {
+					self.nightsPerCellMap <- [];
+					ask myCells {
+						self.overlappingPaddock.nightsPerCellMap <+ self::0;
+					}
+
+				}
+
+			}
+
+			if myPaddock.nightsPerCellMap[currentSleepSpot] >= maxNbNightsPerCell {
 				currentSleepSpot <- one_of(myPaddock.nightsPerCellMap.pairs where (each.value < maxNbNightsPerCell)).key;
 			}
 			///////TODO GERER LE MOMENT OU TOUT EST FULL!!
@@ -71,7 +89,7 @@ species herd control: fsm skills: [moving] {
 		do checkSpotQuality;
 
 		//do wander amplitude: 90.0;
-		do goto target: targetCell speed: herdSpeed;
+		do goto target: targetCell;
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isGrazing when: isInGoodSpot;
 	}
@@ -88,7 +106,7 @@ species herd control: fsm skills: [moving] {
 		}
 
 		do goto target: currentGrazingCell;
-		//satietyMeter <- satietyMeter + fiveMinIntake; TODO
+		satietyMeter <- satietyMeter + fiveMinIntake;
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isResting when: !hungry;
 		transition to: isChangingSite when: !isInGoodSpot;
