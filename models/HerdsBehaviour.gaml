@@ -16,14 +16,14 @@ global {
 	int eveningTime <- 19; // Time of the day at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
 	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
-	float goodSpotThreshold <- 10; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
+	float goodSpotThreshold <- 10.0; // TODOrandom pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
 
 	// Zootechnical data
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg)
 	float fiveMinIntake <- 0.06; // Biomass eaten per 5 min (complètement random)
 
 	// Paddocking
-	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM !
+	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
 }
 
 species herd control: fsm skills: [moving] {
