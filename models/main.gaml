@@ -18,7 +18,7 @@ global {
 	float nitrogenFlowsUpdateFreq <- 1.0 #day;
 
 	// landscape parameters
-	float maxCropBiomassContent <- 2.0; // TODO doit être en matière sèche
+	float maxCropBiomassContent <- 2.0; // TODO doit être en kg matière sèche
 	float maxRangelandBiomassContent <- 10.0; // TODO doit être en matière sèche
 
 	// Initiation
