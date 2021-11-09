@@ -26,6 +26,7 @@ global {
 	geometry shape <- square(5 #km);
 	float cellHeight <- shape.height / gridHeight;
 	float cellWidth <- shape.width / gridWidth;
+	float hectareToCell <- cellWidth * cellHeight / 10000 #m2;
 	float parcelSize <- 50.0 #m; // TODO!! Von Neumann;  100.0 #m Satellite survey.
 	//	init {
 	//		if gridLayout = zoningReduitAudouin15Diohine {

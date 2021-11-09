@@ -13,6 +13,7 @@ import "ExperimentRun.gaml" // Experiment file
 global {
 //Simulation parameters
 	float step <- 30.0 #minutes;
+	float yearToStep <- step / 1.0 #year;
 	float visualUpdate <- 1.0 #week; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
 	float nitrogenFlowsUpdateFreq <- 1.0 #day;

@@ -21,7 +21,7 @@ global {
 	// Zootechnical data TODO ramener à l'échelle du tpx!!
 	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg) TODO : bien en MS?
 	float intakeRate <- 0.36; // kg DM biomass eaten per time step (TODO complètement random, voir Chirat?)
-	float digestionLength <- 10.0 #h; // TODO Duration of the digestion of biomass in the animals
+	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
 	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
 	// Paddocking
@@ -148,6 +148,7 @@ species herd control: fsm skills: [moving] {
 		landscape currentCell <- one_of(landscape overlapping self);
 		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * ratioExcretionIngestion);
 		chymeChunksMap >- first(chymeChunksMap);
+		write name + " pooping on " + currentCell.cellLUSimple;
 	}
 
 	aspect default {

@@ -18,6 +18,7 @@ global {
 //	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
 
 // Nitrogen
+	float initialSoilNStock <- 27.5; // kgN/ha (Grillot, 2018)
 	float vegetalBiomassNContent <- 0.1; // kgN/kgDM TODO sourcer + varier selon LU
 	float fecesNContent <- 0.0238; // kgN/ kg excreted dry matter (INRA, 2018 - overall mean on BoviDig) TODO Fit to area
 	float atmoNFixationHaYear <- 25.0; // kgN/ha/year Grillot (2018) -> soil microorg, trees, rhizobiums; gross estimate TODO refine
@@ -34,55 +35,58 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	}
 
 	// Nitrogen
+	float cellNstock <- initialSoilNStock * hectareToCell;
 	float lastNitrogenUpdateDate <- time;
 	float previousPeriodBiomass <- myPlot.biomassContent;
-	float previousPeriodNUptake;
-	float previousPeriodNIntake;
-	float previousPeriodAtmoNFix;
-	float previousPeriodSoilEmissions;
+	float periodNUptake;
+	float periodNIntake;
+	float periodAtmoNFix;
+	float periodSoilNEmissions;
 
-	reflex updateNitrogenFlows when: every(nitrogenFlowsUpdateFreq) {
+	reflex updateNitrogenFlowsAndStock when: every(nitrogenFlowsUpdateFreq) {
 	// 	// Uptake
 		float lastPeriodBMUptake <- myPlot.biomassContent - previousPeriodBiomass;
 		previousPeriodBiomass <- myPlot.biomassContent;
-		previousPeriodNUptake <- lastPeriodBMUptake * vegetalBiomassNContent; // kgN/step
+		periodNUptake <- lastPeriodBMUptake * vegetalBiomassNContent; // kgN/step
 
 		// Excretions
-		float lastPeriodOMIntake <- 0.0;
+		float periodOMIntake <- 0.0;
 		loop OMDepositDate over: reverse(myPlot.depositedOMMap.keys sort each) {
 			if OMDepositDate <= lastNitrogenUpdateDate {
 				break;
 			}
 
-			lastPeriodOMIntake <- lastPeriodOMIntake + myPlot.depositedOMMap at OMDepositDate;
+			periodOMIntake <- periodOMIntake + myPlot.depositedOMMap at OMDepositDate;
 		}
 
-		if lastPeriodOMIntake != 0.0 {
-			write string(cycle) + " " + name + " intake : " + lastPeriodOMIntake;
-		}
-
-		float lastPeriodExcretionsNIntake <- lastPeriodOMIntake * fecesNContent;
-		float lastPeriodUrineNIntake <- 0.0;
-		if lastPeriodOMIntake != 0.0 {
-			lastPeriodUrineNIntake <- lastPeriodExcretionsNIntake / (1 / (0.2371 * ln(lastPeriodOMIntake * vegetalBiomassNContent) - 0.6436) - 1); // Grange (2015) - goes negative outside of the range of the regression
+		float periodExcretionsNIntake <- periodOMIntake * fecesNContent;
+		float periodUrineNIntake <- 0.0;
+		if periodOMIntake != 0.0 {
+			periodUrineNIntake <- periodExcretionsNIntake / (1 / (0.2371 * ln(periodOMIntake * vegetalBiomassNContent) - 0.6436) - 1); // Grange (2015) - goes negative outside of the range of the regression
 
 		}
 
-		previousPeriodNIntake <- lastPeriodExcretionsNIntake + lastPeriodUrineNIntake; // kgN/step
+		periodNIntake <- periodExcretionsNIntake + periodUrineNIntake; // kgN/step
 
 		// Atmospheric fixation
-		previousPeriodAtmoNFix <- atmoNFixationHaYear / 1.0 #year * step / 10000 #m2 * cellWidth * cellHeight; // kgN/step
+		periodAtmoNFix <- atmoNFixationHaYear * yearToStep * hectareToCell; // kgN/step
 
-		// Emissions : voir Myriam p.81
-		float previousPeriodExcretionEmissions <- lastPeriodExcretionsNIntake * excretionsNEmissionFact;
-		float previousPeriodUrineEmissions <- lastPeriodExcretionsNIntake * excretionsNEmissionFact;
-		previousPeriodSoilEmissions <- previousPeriodExcretionEmissions + previousPeriodUrineEmissions; // kgN/step
+		// Emissions : Grillot (2018)
+		float previousPeriodExcretionEmissions <- periodExcretionsNIntake * excretionsNEmissionFact;
+		float previousPeriodUrineEmissions <- periodExcretionsNIntake * excretionsNEmissionFact;
+		periodSoilNEmissions <- previousPeriodExcretionEmissions + previousPeriodUrineEmissions; // kgN/step
+
+		// Stock update
+		cellNstock <- cellNstock - periodNUptake + periodNIntake + periodAtmoNFix - periodSoilNEmissions;
 
 		//
 		lastNitrogenUpdateDate <- time;
 	}
 
 	aspect nitrogenStock {
+		float nitrogenColourValue <- 255 * (1 - 1 / (1 + exp(initialSoilNStock * hectareToCell - cellNstock))); // Pretty sigmoid with infection at starting value.
+		rgb nitrogenColor <- rgb(255, nitrogenColourValue, nitrogenColourValue);
+		draw square(cellWidth) color: nitrogenColor;
 	}
 
 	//	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
@@ -99,7 +103,6 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	//	}
 	//
 	//	aspect carbonStock {
-	//		location <- myPlot.location;
 	//		float carbonColourValue <- 255 * (1 - 1 / exp(10 - totalCStock)); // Pretty sigmoid; parameters a bit random.
 	//		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
 	//		draw square(cellWidth) color: carbonColor;

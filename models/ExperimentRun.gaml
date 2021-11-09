@@ -17,6 +17,11 @@ experiment simulation type: gui {
 			species herd;
 		}
 
+		display nitrogenDisplay type: java2D refresh: every(visualUpdate) {
+			grid secondaryGrid;
+			species plotStockFlowMecanisms aspect: nitrogenStock;
+		}
+
 		//		display carbonDisplay type: java2D refresh: every(visualUpdate) {
 		//			grid secondaryGrid border: #lightgrey;
 		//			species stockFlowMecanisms aspect: carbonStock;
@@ -24,6 +29,13 @@ experiment simulation type: gui {
 		display plantBiomassChart refresh: every(visualUpdate) {
 			chart "Total plant biomass evolution" type: series {
 				data "Plant biomass" value: landscape sum_of (each.biomassContent);
+			}
+
+		}
+
+		display nitrogenStocksChart refresh: every(visualUpdate) {
+			chart "Soil nitrogen stock evolution" type: series {
+				data "Total stock" value: plotStockFlowMecanisms sum_of (each.cellNstock);
 			}
 
 		}
