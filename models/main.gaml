@@ -19,8 +19,10 @@ global {
 	float nitrogenFlowsUpdateFreq <- 1.0 #day;
 
 	// landscape parameters
-	float maxCropBiomassContent <- 2.0; // TODO doit être en kg matière sèche
-	float maxRangelandBiomassContent <- 10.0; // TODO doit être en matière sèche
+	float maxCropBiomassContentHa <- 129.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
+	float maxRangelandBiomassContentHa <- 149.5; // kgDM/ha Achard & Banoin (2003) - palatable BM; grass and shrubs
+	float maxCropBiomassContent <- maxCropBiomassContentHa * hectareToCell;
+	float maxRangelandBiomassContent <- maxRangelandBiomassContentHa * hectareToCell;
 
 	// Initiation
 	init {
@@ -115,6 +117,7 @@ global {
 			write "Radius increment : " + radiusIncrement;
 		}
 
+		write "** End of init **";
 	}
 
 }
@@ -132,7 +135,7 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	// Biomass and nutrients
 	plotStockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent;
-	map<float, float> depositedOMMap; // TODO la cropper?
+	map<float, float> depositedOMMap; // TODO Crop periodically to save memory space?
 	reflex updateColour when: !nonGrazable {
 		if cellLUSimple = "Cropland" {
 			color <- rgb(255 + (216 - 255) / maxCropBiomassContent * biomassContent, 255 + (232 - 255) / maxCropBiomassContent * biomassContent, 180);

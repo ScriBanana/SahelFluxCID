@@ -1,7 +1,7 @@
 /**
 * Name: ImportZoning
 * In: SahelFlux
-* Imports rasters from Audoin's papers and classifies pixels with their land use.
+* Imports rasters from Audoin's papers and classifies pixels with their land use (Audouin et al. 2015).
 * Author: AS
 * Tags: 
 */
@@ -10,7 +10,6 @@ model ImportZoning
 import "SupportFunctions.gaml"
 
 global {
-// Zoning imports (source : Audouin, E., Vayssières, J., Odru, M., Masse, D., Dorégo, S., Delaunay, V., Lecomte, P., 2015. Réintroduire l’élevage pour accroître la durabilité des terroirs villageois d’Afrique de l’Ouest. Les sociétés rurales face aux changements environnementaux en Afrique de l’Ouest. IRD, Marseille, France 403–427.)
 //	file zoningAudouin15Barry <- image_file("../includes/ZonageBarrySineAudouinEtAl2015.png");
 //	file zoningAudouin15Diohine <- image_file("../includes/ZonageDiohineAudouinEtAl2015.png");
 	file zoningReduitAudouin15Diohine <- image_file("../includes/ZonageReduitDiohineAudouinEtAl2015.png");
@@ -18,24 +17,15 @@ global {
 	file testImg2 <- image_file("../includes/testImg2.png");
 	file gridLayout <- testImg2;
 
-	// Grid parameters
+	// Grid parameters and units
 	int gridHeight <- gridLayout.contents.rows;
 	int gridWidth <- gridLayout.contents.columns;
-
-	// Spatial units
-	geometry shape <- square(5 #km);
+	geometry shape <- rectangle(5150 #m, 5800 #m); // suits for zoningReduitAudouin15Diohine
 	float cellHeight <- shape.height / gridHeight;
 	float cellWidth <- shape.width / gridWidth;
 	float hectareToCell <- cellWidth * cellHeight / 10000 #m2;
-	float parcelSize <- 50.0 #m; // TODO!! Von Neumann;  100.0 #m Satellite survey.
-	//	init {
-	//		if gridLayout = zoningReduitAudouin15Diohine {
-	//			geometry shape <- rectangle(5150 #m, 5800 #m);
-	//		} else {
-	//			geometry shape <- rectangle(5 #km, 5 #km);
-	//		}
-	//
-	//	}
+	float parcelSize <- 100.0 #m; // Satellite survey.
+
 
 	// Landscape units definition (from source)
 	list<string> LUList <- ["Dwellings", "Lowlands", "Ponds", "Wooded savannah", "Fallows", "Rainfed crops", "Gardens"];

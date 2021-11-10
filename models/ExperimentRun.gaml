@@ -8,8 +8,9 @@ Single run of experiment.
 model ExperimentRun
 
 import "main.gaml"
+grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
+
 experiment simulation type: gui {
-	parameter "Grid layout" var: gridLayout among: [testImg2, testImg, zoningReduitAudouin15Diohine]; //, zoningAudouin15Barry, zoningAudouin15Diohine]; // Marche malgré l'exception.
 	output {
 		display mainDisplay type: java2D {
 			grid landscape;
@@ -20,6 +21,11 @@ experiment simulation type: gui {
 		display nitrogenDisplay type: java2D refresh: every(visualUpdate) {
 			grid secondaryGrid;
 			species plotStockFlowMecanisms aspect: nitrogenStock;
+		}
+
+		display OMDepositDisplay type: java2D refresh: every(visualUpdate) {
+			grid secondaryGrid;
+			species plotStockFlowMecanisms aspect: OMDeposited;
 		}
 
 		//		display carbonDisplay type: java2D refresh: every(visualUpdate) {

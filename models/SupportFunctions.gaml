@@ -8,8 +8,8 @@
 model SupportFunctions
 
 global {
-// Compares a colour (rgb) to those of a list of colours and returns the index in the list of the closest colour (euclidian distance)
 	rgb eucliClosestColour (rgb colourToCompare, list<rgb> colourPalette) {
+	// Compares a colour (rgb) to those of a list of colours and returns the index in the list of the closest colour (euclidian distance)
 		rgb closestColour;
 		float shortestDist <- 3 ^ (1 / 2) * 255.0;
 		loop refColour over: colourPalette {

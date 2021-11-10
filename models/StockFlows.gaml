@@ -12,18 +12,21 @@ import "main.gaml"
 global {
 
 // Biophysical parameters
-//// Carbon
-//	float propLabileCFixed <- 0.005; //TODO A PARAM ! selon LU?
-//	float propLabileCMineralised <- 0.05; //TODO A PARAM
-//	float propStableCMineralised <- 0.001; //TODO A PARAM !!SP!!
 
-// Nitrogen
+//	// Nitrogen
 	float initialSoilNStock <- 27.5; // kgN/ha (Grillot, 2018)
-	float vegetalBiomassNContent <- 0.1; // kgN/kgDM TODO sourcer + varier selon LU
-	float fecesNContent <- 0.0238; // kgN/ kg excreted dry matter (INRA, 2018 - overall mean on BoviDig) TODO Fit to area
+	float vegetalCroplandBiomassNContent <- 0.005; // kgN/kgDM (Balandier, 2017) TODO variations according to LU
+	float vegetalRangelandBiomassNContent <- 0.009; // kgN/kgDM (Balandier, 2017) TODO variations according to LU
+	float fecesNContent <- 0.0238; // kgN/ kg excreted dry matter (INRA, 2018 - overall mean on BoviDig; coherent with Balandier, 2017) TODO Fit to area
+	float ratioUrineNFecesN <- 0.25; // Wade, 2016
 	float atmoNFixationHaYear <- 25.0; // kgN/ha/year Grillot (2018) -> soil microorg, trees, rhizobiums; gross estimate TODO refine
-	float excretionsNEmissionFact <- 0.2; // kgN emitted / kgN applied (Grillot, 2018)
-	float urineNEmissionFact <- 0.6; // kgN emitted / kgN applied (Grillot, 2018)
+	float excretionsNEmissionFact <- 0.25; // kgN emitted / kgN applied (Balandier, 2017)
+	float urineNEmissionFact <- 0.45; // kgN emitted / kgN applied (Balandier, 2017)
+
+	// Carbon
+	//	float propLabileCFixed <- 0.005; //TODO PARAM ! selon LU?
+	//	float propLabileCMineralised <- 0.05; //TODO PARAM
+	//	float propStableCMineralised <- 0.001; //TODO PARAM !!SP!!
 
 }
 
@@ -47,7 +50,11 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	// 	// Uptake
 		float lastPeriodBMUptake <- myPlot.biomassContent - previousPeriodBiomass;
 		previousPeriodBiomass <- myPlot.biomassContent;
-		periodNUptake <- lastPeriodBMUptake * vegetalBiomassNContent; // kgN/step
+		if myPlot.cellLUSimple = "Cropland" {
+			periodNUptake <- lastPeriodBMUptake * vegetalCroplandBiomassNContent; // kgN/step
+		} else if myPlot.cellLUSimple = "Rangeland" {
+			periodNUptake <- lastPeriodBMUptake * vegetalRangelandBiomassNContent; // kgN/step
+		}
 
 		// Excretions
 		float periodOMIntake <- 0.0;
@@ -60,12 +67,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		}
 
 		float periodExcretionsNIntake <- periodOMIntake * fecesNContent;
-		float periodUrineNIntake <- 0.0;
-		if periodOMIntake != 0.0 {
-			periodUrineNIntake <- periodExcretionsNIntake / (1 / (0.2371 * ln(periodOMIntake * vegetalBiomassNContent) - 0.6436) - 1); // Grange (2015) - goes negative outside of the range of the regression
-
-		}
-
+		float periodUrineNIntake <- periodExcretionsNIntake * ratioUrineNFecesN;
 		periodNIntake <- periodExcretionsNIntake + periodUrineNIntake; // kgN/step
 
 		// Atmospheric fixation
@@ -73,7 +75,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 
 		// Emissions : Grillot (2018)
 		float previousPeriodExcretionEmissions <- periodExcretionsNIntake * excretionsNEmissionFact;
-		float previousPeriodUrineEmissions <- periodExcretionsNIntake * excretionsNEmissionFact;
+		float previousPeriodUrineEmissions <- periodUrineNIntake * urineNEmissionFact;
 		periodSoilNEmissions <- previousPeriodExcretionEmissions + previousPeriodUrineEmissions; // kgN/step
 
 		// Stock update
@@ -90,9 +92,9 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	}
 
 	//	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
-	//	float soilCInput <- 0.1; //TODO A PARAM
-	//	float labileCStock <- 2.0; //TODO A PARAM
-	//	float stableCStock <- 5.0; //TODO A PARAM
+	//	float soilCInput <- 0.1; //TODO PARAM
+	//	float labileCStock <- 2.0; //TODO PARAM
+	//	float stableCStock <- 5.0; //TODO PARAM
 	//	float totalCStock <- labileCStock + stableCStock;
 	//
 	//	reflex updateCStocks when: every(stockCUpdateFreq) {
@@ -108,6 +110,12 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	//		draw square(cellWidth) color: carbonColor;
 	//	}
 
+	// OMDeposit
+	aspect OMDeposited {
+		float OMColourValue <- 2 * (255 / (1 + exp(-sum(myPlot.depositedOMMap.values)))) - 255; // Random 45.
+		rgb OMColor <- rgb(255 - OMColourValue, 255 - OMColourValue, 255);
+		draw square(cellWidth) color: OMColor;
+	}
+
 }
 
-grid secondaryGrid width: gridWidth height: gridHeight parallel: true;

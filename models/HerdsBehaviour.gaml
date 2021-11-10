@@ -11,15 +11,18 @@ import "main.gaml"
 
 global {
 	int nbHerdsInit <- 50; //TODO Baser sur Myriam
+	int herdSize <- 15; // Tropical livestock unit (TLU) TODO
+
 	// Behaviour
-	int wakeUpTime <- 8; // Time of the day at which animals are released in the morning (Own accelerometer data)
-	int eveningTime <- 19; // Time of the day at which animals come back to their sleeping spot (Own accelerometer data)
+	int wakeUpTime <- 8; // Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
+	int eveningTime <- 19; // Time of the day (24h) at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
-	float herdVisionRadius <- 45.0 #m; //(Gersie, 2020)
+	float herdVisionRadius <- 45.0 #m; // (Gersie, 2020)
 	float goodSpotThreshold <- 10.0; // TODO random pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
 
 	// Zootechnical data TODO ramener à l'échelle du tpx!!
-	float dailyBiomassConsumed <- 5.8; // Maximum amount of biomass consumed daily. (Memento p. 1411 pour bovins adultes de 2 à 3 ans de 250 kg) TODO : bien en MS?
+	float dailyBiomassConsumedPerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016)
+	float dailyBiomassConsumedPerHerd <- dailyBiomassConsumedPerTLU * herdSize;
 	float intakeRate <- 0.36; // kg DM biomass eaten per time step (TODO complètement random, voir Chirat?)
 	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
 	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
@@ -38,7 +41,7 @@ species herd control: fsm skills: [moving] {
 	// Grazing parameters
 	map<float, float> chymeChunksMap;
 	float satietyMeter <- 0.0;
-	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumed);
+	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumedPerHerd);
 
 	// FSM parameters
 	// Sleep time in between globals wakeUpTime and eveningTime
@@ -134,7 +137,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	action graze (landscape cellToGraze) {
-		float eatenBiomass <- intakeRate; // Adaptable if variable IIR are intruduced
+		float eatenBiomass <- intakeRate * herdSize; // Adaptable if variable IIR are introduced
 		ask cellToGraze {
 			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}
@@ -144,11 +147,10 @@ species herd control: fsm skills: [moving] {
 	}
 
 	// Grange (2015), Wade (2016). Urine is computed in StockFlows.gaml
-	reflex excrete when: !empty(chymeChunksMap) and chymeChunksMap.keys[0] + digestionLength > time {
+	reflex excrete when: !empty(chymeChunksMap) and time - first(chymeChunksMap.keys) > digestionLength {
 		landscape currentCell <- one_of(landscape overlapping self);
-		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * ratioExcretionIngestion);
+		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * herdSize * ratioExcretionIngestion);
 		chymeChunksMap >- first(chymeChunksMap);
-		write name + " pooping on " + currentCell.cellLUSimple;
 	}
 
 	aspect default {
