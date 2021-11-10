@@ -11,12 +11,13 @@ import "StockFlows.gaml" // Soil biophysical processes.
 import "HerdsBehaviour.gaml" // Herds behaviour and movement.
 import "ExperimentRun.gaml" // Experiment file
 global {
-//Simulation parameters
+//	// Simulation parameters
 	float step <- 30.0 #minutes;
 	float yearToStep <- step / 1.0 #year;
-	float visualUpdate <- 1.0 #week; // For all but the main display
+	float visualUpdate <- 1.0 #day; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
 	float nitrogenFlowsUpdateFreq <- 1.0 #day;
+	float endDate <- 8.0 #month; // Dry season length
 
 	// landscape parameters
 	float maxCropBiomassContentHa <- 129.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
@@ -26,6 +27,7 @@ global {
 
 	// Initiation
 	init {
+		write "Reading input raster";
 		loop cell over: landscape {
 
 		// LU attribution according to colour (see ImportZoning.gaml)
@@ -67,13 +69,13 @@ global {
 
 		}
 
+		// Creating herds and paddock instantiation
+		write "Placing paddocks";
 		create herd number: nbHerdsInit;
-
-		// Paddock instantiation
 		int newParc <- 0;
 		float radiusIncrement <- 0.0;
 		loop while: newParc < nbHerdsInit {
-			loop cell over: shuffle(landscape where (each distance_to centroid(world) <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
+			loop cell over: shuffle(landscape where (each distance_to villageLocation <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
 			each.overlappingPaddock = nil)) {
 				if empty((cell neighbors_at parcelSize where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
 					if newParc < nbHerdsInit {
@@ -102,7 +104,7 @@ global {
 
 						newParc <- newParc + 1;
 						if newParc mod 10 = 0 {
-							write "Paddocks placed : " + newParc;
+							write "	Paddocks placed : " + newParc;
 						}
 
 					} else {
@@ -114,17 +116,43 @@ global {
 			}
 
 			radiusIncrement <- radiusIncrement + cellWidth;
-			write "Radius increment : " + radiusIncrement;
+			write "		Radius increment : " + radiusIncrement + " m";
+			assert radiusIncrement < sqrt(shape.height * shape.width); // Breaks the while loop
 		}
 
-		write "** End of init **";
+		write "End of init";
+	}
+
+	// Some global state variables
+	float meanBiomassContent;
+	float biomassContentSD;
+
+	reflex updateSomeGlobalVariables {
+		list<float> allCellsBiomass;
+		ask landscape where (!each.nonGrazable) {
+			allCellsBiomass <+ self.biomassContent;
+		}
+
+		meanBiomassContent <- mean(allCellsBiomass); // Annoying but more efficient since there's no standard_deviation_of...
+		biomassContentSD <- standard_deviation(allCellsBiomass);
+	}
+
+	// Weekly print
+	reflex timeStamp when: every(#week) {
+		write string(date(time), "'Week 'w");
+	}
+
+	// Break statement
+	reflex stopSim when: time > endDate {
+		write "Dry season over, end of the simulation";
+		do pause;
 	}
 
 }
 
 grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 
-// Land use
+//	// Land use
 	string cellLU;
 	string cellLUSimple;
 	bool nonGrazable <- false;
@@ -134,14 +162,16 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 
 	// Biomass and nutrients
 	plotStockFlowMecanisms myStockFlowMecanisms;
-	float biomassContent;
+	float biomassContent min: 0.0 max: max(maxCropBiomassContent, maxRangelandBiomassContent);
 	map<float, float> depositedOMMap; // TODO Crop periodically to save memory space?
+
+	// Colouring
 	reflex updateColour when: !nonGrazable {
 		if cellLUSimple = "Cropland" {
 			color <- rgb(255 + (216 - 255) / maxCropBiomassContent * biomassContent, 255 + (232 - 255) / maxCropBiomassContent * biomassContent, 180);
 		} else if cellLUSimple = "Rangeland" {
 			color <-
-			rgb(200 + (101 - 200) / maxCropBiomassContent * biomassContent, 230 + (198 - 230) / maxCropBiomassContent * biomassContent, 180 + (110 - 180) / maxCropBiomassContent * biomassContent);
+			rgb(200 + (101 - 200) / maxRangelandBiomassContent * biomassContent, 230 + (198 - 230) / maxRangelandBiomassContent * biomassContent, 180 + (110 - 180) / maxRangelandBiomassContent * biomassContent);
 		}
 
 	}
@@ -157,7 +187,7 @@ species nightPaddock {
 	aspect default {
 		draw square(cellWidth / 2) color: myHerd.herdColour;
 		ask myCells {
-			draw square(cellWidth) color: #transparent border: myself.myHerd.herdColour;
+			draw rectangle(cellWidth, cellHeight) color: #transparent border: myself.myHerd.herdColour;
 		}
 
 	}

@@ -26,9 +26,10 @@ global {
 	float hectareToCell <- cellWidth * cellHeight / 10000 #m2;
 	float parcelSize <- 100.0 #m; // Satellite survey.
 
-
 	// Landscape units definition (from source)
 	list<string> LUList <- ["Dwellings", "Lowlands", "Ponds", "Wooded savannah", "Fallows", "Rainfed crops", "Gardens"];
 	list<rgb> LUColourList <- [rgb(124, 130, 134), rgb(44, 217, 244), rgb(0, 114, 185), rgb(101, 198, 110), rgb(57, 208, 202), rgb(216, 232, 180), rgb(0, 187, 53)];
+	//point villageLocation <- centroid(world);
+	point villageLocation <- point(2961, 4205);
 }
 

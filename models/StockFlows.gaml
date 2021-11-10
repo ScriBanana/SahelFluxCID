@@ -38,7 +38,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	}
 
 	// Nitrogen
-	float cellNstock <- initialSoilNStock * hectareToCell;
+	float cellNstock <- initialSoilNStock * hectareToCell min: 0.0;
 	float lastNitrogenUpdateDate <- time;
 	float previousPeriodBiomass <- myPlot.biomassContent;
 	float periodNUptake;
@@ -88,7 +88,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	aspect nitrogenStock {
 		float nitrogenColourValue <- 255 * (1 - 1 / (1 + exp(initialSoilNStock * hectareToCell - cellNstock))); // Pretty sigmoid with infection at starting value.
 		rgb nitrogenColor <- rgb(255, nitrogenColourValue, nitrogenColourValue);
-		draw square(cellWidth) color: nitrogenColor;
+		draw rectangle(cellWidth, cellHeight) color: nitrogenColor;
 	}
 
 	//	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)
@@ -112,9 +112,9 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 
 	// OMDeposit
 	aspect OMDeposited {
-		float OMColourValue <- 2 * (255 / (1 + exp(-sum(myPlot.depositedOMMap.values)))) - 255; // Random 45.
+		float OMColourValue <- 2 * (255 / (1 + exp(-sum(myPlot.depositedOMMap.values) / 100))) - 255; // TODO mettre la demi max val
 		rgb OMColor <- rgb(255 - OMColourValue, 255 - OMColourValue, 255);
-		draw square(cellWidth) color: OMColor;
+		draw rectangle(cellWidth, cellHeight) color: OMColor;
 	}
 
 }

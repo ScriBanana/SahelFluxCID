@@ -17,8 +17,7 @@ global {
 	int wakeUpTime <- 8; // Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
 	int eveningTime <- 19; // Time of the day (24h) at which animals come back to their sleeping spot (Own accelerometer data)
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
-	float herdVisionRadius <- 45.0 #m; // (Gersie, 2020)
-	float goodSpotThreshold <- 10.0; // TODO random pour l'heure! Amount of biomass in herdVisionRadius for the spot to be deemed suitable ant the herd to stop and start grazing
+	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
 
 	// Zootechnical data TODO ramener à l'échelle du tpx!!
 	float dailyBiomassConsumedPerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016)
@@ -34,16 +33,16 @@ global {
 species herd control: fsm skills: [moving] {
 	rgb herdColour <- rnd_color(255);
 
-	// Paddocking parameters
+	// Paddocking parameters and variables
 	nightPaddock myPaddock <- nil;
 	landscape currentSleepSpot;
 
-	// Grazing parameters
+	// Grazing variables
 	map<float, float> chymeChunksMap;
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumedPerHerd);
 
-	// FSM parameters
+	// FSM parameters and variables
 	// Sleep time in between globals wakeUpTime and eveningTime
 	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
 	landscape targetCell <- one_of(landscape where !each.nonGrazable);
@@ -108,9 +107,10 @@ species herd control: fsm skills: [moving] {
 	}
 
 	//// Functions ////
-	list<landscape> checkSpotQuality { // and return visible cells
+	list<landscape> checkSpotQuality { // and return visible cells.
 		list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
-		isInGoodSpot <- cellsAround sum_of each.biomassContent > goodSpotThreshold ? true : false;
+		float goodSpotThreshold <- meanBiomassContent - biomassContentSD; // Gersie, 2020
+		isInGoodSpot <- cellsAround mean_of each.biomassContent > goodSpotThreshold ? true : false;
 		return cellsAround;
 	}
 
