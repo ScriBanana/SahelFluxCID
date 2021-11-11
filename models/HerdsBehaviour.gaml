@@ -19,10 +19,13 @@ global {
 	float herdSpeed <- 0.833; // m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
 	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
 
-	// Zootechnical data TODO ramener à l'échelle du tpx!!
-	float dailyBiomassConsumedPerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016)
-	float dailyBiomassConsumedPerHerd <- dailyBiomassConsumedPerTLU * herdSize;
-	float intakeRate <- 0.36; // kg DM biomass eaten per time step (TODO complètement random, voir Chirat?)
+	// Zootechnical data
+	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016)
+	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
+	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
+	float IIRRangelandHerd <- IIRRangelandTLU * herdSize * step / #minute;
+	float IIRCroplandTLU <- 10.9; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
+	float IIRCroplandHerd <- IIRCroplandTLU * herdSize * step / #minute;
 	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
 	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
@@ -40,7 +43,8 @@ species herd control: fsm skills: [moving] {
 	// Grazing variables
 	map<float, float> chymeChunksMap;
 	float satietyMeter <- 0.0;
-	bool hungry <- true update: (satietyMeter <= dailyBiomassConsumedPerHerd);
+	bool hungry <- true update: (satietyMeter <= dailyIntakeRatePerHerd);
+	landscape currentCell update: one_of(landscape overlapping self);
 
 	// FSM parameters and variables
 	// Sleep time in between globals wakeUpTime and eveningTime
@@ -137,7 +141,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	action graze (landscape cellToGraze) {
-		float eatenBiomass <- intakeRate * herdSize; // Adaptable if variable IIR are introduced
+		float eatenBiomass <- currentCell.cellLUSimple = "Rangeland" ? (IIRRangelandHerd * herdSize) : (IIRCroplandHerd * herdSize);
 		ask cellToGraze {
 			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}
@@ -148,7 +152,6 @@ species herd control: fsm skills: [moving] {
 
 	// Grange (2015), Wade (2016). Urine is computed in StockFlows.gaml
 	reflex excrete when: !empty(chymeChunksMap) and time - first(chymeChunksMap.keys) > digestionLength {
-		landscape currentCell <- one_of(landscape overlapping self);
 		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * herdSize * ratioExcretionIngestion);
 		chymeChunksMap >- first(chymeChunksMap);
 	}

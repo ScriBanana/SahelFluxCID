@@ -115,8 +115,8 @@ global {
 
 			}
 
-			radiusIncrement <- radiusIncrement + cellWidth;
-			write "		Radius increment : " + radiusIncrement + " m";
+			radiusIncrement <- radiusIncrement + cellWidth * 2;
+			write "		Scanned radius : " + round(sqrt(nbHerdsInit) * cellWidth + radiusIncrement) + " m";
 			assert radiusIncrement < sqrt(shape.height * shape.width); // Breaks the while loop
 		}
 
@@ -185,7 +185,6 @@ species nightPaddock {
 	herd myHerd;
 
 	aspect default {
-		draw square(cellWidth / 2) color: myHerd.herdColour;
 		ask myCells {
 			draw rectangle(cellWidth, cellHeight) color: #transparent border: myself.myHerd.herdColour;
 		}
