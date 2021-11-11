@@ -16,7 +16,7 @@ global {
 	float yearToStep <- step / 1.0 #year;
 	float visualUpdate <- 1.0 #day; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
-	float nitrogenFlowsUpdateFreq <- 1.0 #day;
+	float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float endDate <- 8.0 #month; // Dry season length
 
 	// landscape parameters
@@ -39,7 +39,8 @@ global {
 			if cell.cellLU = "Rainfed crops" or cell.cellLU = "Fallows" {
 			//Random value for biomass and associated colour, based on LU
 				cell.cellLUSimple <- "Cropland";
-				cell.biomassContent <- rnd(maxCropBiomassContent);
+				cell.biomassContent <- maxCropBiomassContent - abs(gauss(0, maxCropBiomassContent / 20)); //sigma random
+				cell.initialBiomassContent <- cell.biomassContent;
 				//color <- rgb(216, 232, 180);
 				cell.color <- rgb(255 + (216 - 255) / maxCropBiomassContent * cell.biomassContent, 255 + (232 - 255) / maxCropBiomassContent * cell.biomassContent, 180);
 
@@ -51,7 +52,8 @@ global {
 			} else if cell.cellLU = "Wooded savannah" or cell.cellLU = "Lowlands" {
 			//Random value for biomass and associated colour, based on LU
 				cell.cellLUSimple <- "Rangeland";
-				cell.biomassContent <- rnd(maxRangelandBiomassContent);
+				cell.biomassContent <- maxRangelandBiomassContent - abs(gauss(0, maxRangelandBiomassContent / 10)); //sigma random
+				cell.initialBiomassContent <- cell.biomassContent;
 				//color <- rgb(101, 198, 110);
 				cell.color <-
 				rgb(200 + (101 - 200) / maxCropBiomassContent * cell.biomassContent, 230 + (198 - 230) / maxCropBiomassContent * cell.biomassContent, 180 + (110 - 180) / maxCropBiomassContent * cell.biomassContent);
@@ -77,7 +79,7 @@ global {
 		loop while: newParc < nbHerdsInit {
 			loop cell over: shuffle(landscape where (each distance_to villageLocation <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
 			each.overlappingPaddock = nil)) {
-				if empty((cell neighbors_at parcelSize where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
+				if empty((cell neighbors_at (parcelSize / 2) where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
 					if newParc < nbHerdsInit {
 						create nightPaddock {
 
@@ -86,7 +88,7 @@ global {
 							myOriginCell.overlappingPaddock <- self;
 							self.myCells <+ myOriginCell;
 							location <- myOriginCell.location;
-							ask (myOriginCell neighbors_at parcelSize) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
+							ask myOriginCell neighbors_at (parcelSize / 2) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
 								self.overlappingPaddock <- myself;
 								myself.myCells <+ self;
 								myself.nightsPerCellMap <+ self::0;
@@ -127,7 +129,7 @@ global {
 	float meanBiomassContent;
 	float biomassContentSD;
 
-	reflex updateSomeGlobalVariables {
+	reflex updateSomeGlobalVariables when: every(biophysicalProcessesUpdateFreq) {
 		list<float> allCellsBiomass;
 		ask landscape where (!each.nonGrazable) {
 			allCellsBiomass <+ self.biomassContent;
@@ -163,6 +165,7 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	// Biomass and nutrients
 	plotStockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent min: 0.0 max: max(maxCropBiomassContent, maxRangelandBiomassContent);
+	float initialBiomassContent;
 	map<float, float> depositedOMMap; // TODO Crop periodically to save memory space?
 
 	// Colouring
@@ -174,6 +177,14 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 			rgb(200 + (101 - 200) / maxRangelandBiomassContent * biomassContent, 230 + (198 - 230) / maxRangelandBiomassContent * biomassContent, 180 + (110 - 180) / maxRangelandBiomassContent * biomassContent);
 		}
 
+	}
+
+	// OMDeposit
+	aspect OMDeposited {
+		float OMIntakeColourValue <- 2 * (255 / (1 + exp(-sum(depositedOMMap.values) / max(maxCropBiomassContent, maxRangelandBiomassContent) / (1 #week / step)))) - 255;
+		float OMUptakeColourValue <- 2 * (255 / (1 + exp(-(initialBiomassContent - biomassContent) / maxCropBiomassContent / 2))) - 255;
+		rgb OMColor <- rgb(255 - OMIntakeColourValue, 255 - OMIntakeColourValue - OMUptakeColourValue, 255 - OMUptakeColourValue);
+		draw rectangle(cellWidth, cellHeight) color: OMColor;
 	}
 
 }

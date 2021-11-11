@@ -10,8 +10,8 @@ model HerdsBehaviour
 import "main.gaml"
 
 global {
-	int nbHerdsInit <- 50; //TODO Baser sur Myriam
-	int herdSize <- 15; // Tropical livestock unit (TLU) TODO
+	int nbHerdsInit <- 84; // (Grillot et al, 2018)
+	int herdSize <- round(gauss(3.7, 0.2)); // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
 
 	// Behaviour
 	int wakeUpTime <- 8; // Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
@@ -20,12 +20,12 @@ global {
 	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
 
 	// Zootechnical data
-	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016)
+	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
 	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
 	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float IIRRangelandHerd <- IIRRangelandTLU * herdSize * step / #minute;
+	float IIRRangelandHerd <- IIRRangelandTLU / 1000 * step / #minute * herdSize;
 	float IIRCroplandTLU <- 10.9; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float IIRCroplandHerd <- IIRCroplandTLU * herdSize * step / #minute;
+	float IIRCroplandHerd <- IIRCroplandTLU / 1000 * step / #minute * herdSize;
 	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
 	float ratioExcretionIngestion <- 0.55; // Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
@@ -99,7 +99,7 @@ species herd control: fsm skills: [moving] {
 		}
 
 		do goto target: currentGrazingCell;
-		do graze(currentGrazingCell);
+		do graze(currentGrazingCell); // Add conditionnal if speed*step gets significantly reduced
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isResting when: !hungry;
 		transition to: isChangingSite when: !isInGoodSpot;
@@ -141,7 +141,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	action graze (landscape cellToGraze) {
-		float eatenBiomass <- currentCell.cellLUSimple = "Rangeland" ? (IIRRangelandHerd * herdSize) : (IIRCroplandHerd * herdSize);
+		float eatenBiomass <- currentCell.cellLUSimple = "Rangeland" ? IIRRangelandHerd * herdSize : IIRCroplandHerd;
 		ask cellToGraze {
 			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}

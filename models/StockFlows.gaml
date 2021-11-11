@@ -46,7 +46,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	float periodAtmoNFix;
 	float periodSoilNEmissions;
 
-	reflex updateNitrogenFlowsAndStock when: every(nitrogenFlowsUpdateFreq) {
+	reflex updateNitrogenFlowsAndStock when: every(biophysicalProcessesUpdateFreq) {
 	// 	// Uptake
 		float lastPeriodBMUptake <- myPlot.biomassContent - previousPeriodBiomass;
 		previousPeriodBiomass <- myPlot.biomassContent;
@@ -109,13 +109,6 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	//		rgb carbonColor <- rgb(carbonColourValue, carbonColourValue, carbonColourValue);
 	//		draw square(cellWidth) color: carbonColor;
 	//	}
-
-	// OMDeposit
-	aspect OMDeposited {
-		float OMColourValue <- 2 * (255 / (1 + exp(-sum(myPlot.depositedOMMap.values) / 100))) - 255; // TODO mettre la demi max val
-		rgb OMColor <- rgb(255 - OMColourValue, 255 - OMColourValue, 255);
-		draw rectangle(cellWidth, cellHeight) color: OMColor;
-	}
 
 }
 

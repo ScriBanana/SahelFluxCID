@@ -21,7 +21,7 @@ experiment simulation type: gui {
 
 		display OMDepositDisplay type: java2D refresh: every(visualUpdate) {
 			grid secondaryGrid;
-			species plotStockFlowMecanisms aspect: OMDeposited;
+			species landscape aspect: OMDeposited;
 		}
 
 		display plantBiomassChart refresh: every(visualUpdate) {
