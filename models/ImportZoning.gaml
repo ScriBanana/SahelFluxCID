@@ -12,16 +12,17 @@ import "SupportFunctions.gaml"
 global {
 //	file zoningAudouin15Barry <- image_file("../includes/ZonageBarrySineAudouinEtAl2015.png");
 //	file zoningAudouin15Diohine <- image_file("../includes/ZonageDiohineAudouinEtAl2015.png");
-	file zoningReduitAudouin15Diohine <- image_file("../includes/ZonageReduitDiohineAudouinEtAl2015.png");
+//	file zoningReduitAudouin15Diohine <- image_file("../includes/ZonageReduitDiohineAudouinEtAl2015.png");
 	file zoningLRAudouin15Diohine <- image_file("../includes/ZonageReduitDiohineAudouinEtAl2015_LowRes.png");
-	file testImg <- image_file("../includes/testImg.png");
-	file testImg2 <- image_file("../includes/testImg2.png");
+	//	file testImg <- image_file("../includes/testImg.png");
+	//	file testImg2 <- image_file("../includes/testImg2.png");
 	file gridLayout <- zoningLRAudouin15Diohine;
 
 	// Grid parameters and units
 	geometry shape <- rectangle(4980 #m, 6140 #m); // suits for zoningLRAudouin15Diohine
 	point villageLocation <- point(3294, 2993); // suits for zoningLRAudouin15Diohine
-	float parcelSize <- 100.0 #m; // Satellite survey.
+	float meanParcelSize <- 100.0 #m; // Satellite survey.
+	float SDParcelSize <- 50.0 #m; // For normal distribution. Random value
 	int gridHeight <- gridLayout.contents.rows;
 	int gridWidth <- gridLayout.contents.columns;
 	float cellHeight <- shape.height / gridHeight;

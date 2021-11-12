@@ -39,12 +39,14 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 
 	// Nitrogen
 	float cellNstock <- initialSoilNStock * hectareToCell min: 0.0;
+	float varCellNstock;
 	float lastNitrogenUpdateDate <- time;
 	float previousPeriodBiomass <- myPlot.biomassContent;
 	float periodNUptake;
 	float periodNIntake;
 	float periodAtmoNFix;
 	float periodSoilNEmissions;
+	map<list, list> cellNFluxMatrix;
 
 	reflex updateNitrogenFlowsAndStock when: every(biophysicalProcessesUpdateFreq) {
 	// 	// Uptake
@@ -66,6 +68,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 			periodOMIntake <- periodOMIntake + myPlot.depositedOMMap at OMDepositDate;
 		}
 
+		lastNitrogenUpdateDate <- time;
 		float periodExcretionsNIntake <- periodOMIntake * fecesNContent;
 		float periodUrineNIntake <- periodExcretionsNIntake * ratioUrineNFecesN;
 		periodNIntake <- periodExcretionsNIntake + periodUrineNIntake; // kgN/step
@@ -79,16 +82,47 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		periodSoilNEmissions <- previousPeriodExcretionEmissions + previousPeriodUrineEmissions; // kgN/step
 
 		// Stock update
+		varCellNstock <- cellNstock - varCellNstock;
 		cellNstock <- cellNstock - periodNUptake + periodNIntake + periodAtmoNFix - periodSoilNEmissions;
 
-		//
-		lastNitrogenUpdateDate <- time;
+		// Return
+		cellNFluxMatrix <+ [name, time]::[cellNstock, varCellNstock, periodNUptake, periodNIntake, periodAtmoNFix, periodSoilNEmissions];
 	}
 
+	////	Displays		////
+	rgb borderColourValue;
+	rgb rangelandColourValue <- LUColourList[3];
+	rgb croplandColourValue <- LUColourList[5];
+
+	// OMDeposit
+	aspect OMDeposited {
+		float OMIntakeColourValue <- 2 * (255 / (1 + exp(-sum(myPlot.depositedOMMap.values) / max(maxCropBiomassContent, maxRangelandBiomassContent) / (1 #week / step)))) - 255;
+		float OMUptakeColourValue <- 2 * (255 / (1 + exp(-(myPlot.initialBiomassContent - myPlot.biomassContent) / maxCropBiomassContent / 2))) - 255;
+		rgb OMColour <- rgb(255 - OMIntakeColourValue, 255 - OMIntakeColourValue - OMUptakeColourValue, 255 - OMUptakeColourValue);
+		if myPlot.cellLUSimple = "Rangeland" {
+			borderColourValue <- rangelandColourValue;
+		} else if myPlot.cellLUSimple = "Cropland" {
+			borderColourValue <- croplandColourValue;
+		} else {
+			borderColourValue <- #white;
+		}
+
+		draw rectangle(cellWidth, cellHeight) color: OMColour border: borderColourValue;
+	}
+
+	// Nitrogen
 	aspect nitrogenStock {
 		float nitrogenColourValue <- 255 * (1 - 1 / (1 + exp(initialSoilNStock * hectareToCell - cellNstock))); // Pretty sigmoid with infection at starting value.
 		rgb nitrogenColor <- rgb(255, nitrogenColourValue, nitrogenColourValue);
-		draw rectangle(cellWidth, cellHeight) color: nitrogenColor;
+		if myPlot.cellLUSimple = "Rangeland" {
+			borderColourValue <- rangelandColourValue;
+		} else if myPlot.cellLUSimple = "Cropland" {
+			borderColourValue <- croplandColourValue;
+		} else {
+			borderColourValue <- #white;
+		}
+
+		draw rectangle(cellWidth, cellHeight) color: nitrogenColor border: borderColourValue;
 	}
 
 	//	// 2 compartments carbon kinetic (based on ICBM; Andrén and Kätterer, 1997)

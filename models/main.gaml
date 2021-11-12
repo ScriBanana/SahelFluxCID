@@ -14,14 +14,15 @@ global {
 //	// Simulation parameters
 	float step <- 30.0 #minutes;
 	float yearToStep <- step / 1.0 #year;
-	float visualUpdate <- 1.0 #day; // For all but the main display
+	float visualUpdate <- 1.0 #week; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
+	float outputsComputationFreq <- 1.0 #month;
 	float endDate <- 8.0 #month; // Dry season length
 
 	// landscape parameters
-	float maxCropBiomassContentHa <- 129.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
-	float maxRangelandBiomassContentHa <- 149.5; // kgDM/ha Achard & Banoin (2003) - palatable BM; grass and shrubs
+	float maxCropBiomassContentHa <- 351.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
+	float maxRangelandBiomassContentHa <- 375.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; grass and shrubs
 	float maxCropBiomassContent <- maxCropBiomassContentHa * hectareToCell;
 	float maxRangelandBiomassContent <- maxRangelandBiomassContentHa * hectareToCell;
 
@@ -66,7 +67,7 @@ global {
 			} else {
 				cell.cellLUSimple <- "NonCrossable";
 				cell.nonGrazable <- true;
-				cell.color <- #grey;
+				cell.color <- rgb(102, 102, 102);
 			}
 
 		}
@@ -79,6 +80,7 @@ global {
 		loop while: newParc < nbHerdsInit {
 			loop cell over: shuffle(landscape where (each distance_to villageLocation <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
 			each.overlappingPaddock = nil)) {
+				float parcelSize <- gauss(meanParcelSize, SDParcelSize);
 				if empty((cell neighbors_at (parcelSize / 2) where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
 					if newParc < nbHerdsInit {
 						create nightPaddock {
@@ -139,8 +141,17 @@ global {
 		biomassContentSD <- standard_deviation(allCellsBiomass);
 	}
 
+	reflex computeENAIndicators when: every(outputsComputationFreq) {
+		list<map> NFluxMatrix;
+		ask landscape where !each.nonGrazable {
+			NFluxMatrix <+ self.myStockFlowMecanisms.cellNFluxMatrix;
+		}
+
+		write NFluxMatrix;
+	}
+
 	// Weekly print
-	reflex timeStamp when: every(#week) {
+	reflex weekPrompt when: every(#week) {
 		write string(date(time), "'Week 'w");
 	}
 
@@ -177,14 +188,6 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 			rgb(200 + (101 - 200) / maxRangelandBiomassContent * biomassContent, 230 + (198 - 230) / maxRangelandBiomassContent * biomassContent, 180 + (110 - 180) / maxRangelandBiomassContent * biomassContent);
 		}
 
-	}
-
-	// OMDeposit
-	aspect OMDeposited {
-		float OMIntakeColourValue <- 2 * (255 / (1 + exp(-sum(depositedOMMap.values) / max(maxCropBiomassContent, maxRangelandBiomassContent) / (1 #week / step)))) - 255;
-		float OMUptakeColourValue <- 2 * (255 / (1 + exp(-(initialBiomassContent - biomassContent) / maxCropBiomassContent / 2))) - 255;
-		rgb OMColor <- rgb(255 - OMIntakeColourValue, 255 - OMIntakeColourValue - OMUptakeColourValue, 255 - OMUptakeColourValue);
-		draw rectangle(cellWidth, cellHeight) color: OMColor;
 	}
 
 }
