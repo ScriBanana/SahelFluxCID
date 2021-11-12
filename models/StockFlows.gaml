@@ -46,7 +46,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 	float periodNIntake;
 	float periodAtmoNFix;
 	float periodSoilNEmissions;
-	map<list, list> cellNFluxMatrix;
+	map<string, float> cellNFluxMatrix <- ["varCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
 
 	reflex updateNitrogenFlowsAndStock when: every(biophysicalProcessesUpdateFreq) {
 	// 	// Uptake
@@ -57,6 +57,8 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		} else if myPlot.cellLUSimple = "Rangeland" {
 			periodNUptake <- lastPeriodBMUptake * vegetalRangelandBiomassNContent; // kgN/step
 		}
+
+		cellNFluxMatrix["periodNUptake"] <- cellNFluxMatrix["periodNUptake"] + periodNUptake;
 
 		// Excretions
 		float periodOMIntake <- 0.0;
@@ -72,21 +74,22 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		float periodExcretionsNIntake <- periodOMIntake * fecesNContent;
 		float periodUrineNIntake <- periodExcretionsNIntake * ratioUrineNFecesN;
 		periodNIntake <- periodExcretionsNIntake + periodUrineNIntake; // kgN/step
+		cellNFluxMatrix["periodNIntake"] <- cellNFluxMatrix["periodNIntake"] + periodNIntake;
 
 		// Atmospheric fixation
 		periodAtmoNFix <- atmoNFixationHaYear * yearToStep * hectareToCell; // kgN/step
+		cellNFluxMatrix["periodAtmoNFix"] <- cellNFluxMatrix["periodAtmoNFix"] + periodAtmoNFix;
 
 		// Emissions : Grillot (2018)
 		float previousPeriodExcretionEmissions <- periodExcretionsNIntake * excretionsNEmissionFact;
 		float previousPeriodUrineEmissions <- periodUrineNIntake * urineNEmissionFact;
 		periodSoilNEmissions <- previousPeriodExcretionEmissions + previousPeriodUrineEmissions; // kgN/step
+		cellNFluxMatrix["periodSoilNEmissions"] <- cellNFluxMatrix["periodSoilNEmissions"] + periodSoilNEmissions;
 
 		// Stock update
 		varCellNstock <- cellNstock - varCellNstock;
+		cellNFluxMatrix["varCellNstock"] <- cellNFluxMatrix["varCellNstock"] + varCellNstock;
 		cellNstock <- cellNstock - periodNUptake + periodNIntake + periodAtmoNFix - periodSoilNEmissions;
-
-		// Return
-		cellNFluxMatrix <+ [name, time]::[cellNstock, varCellNstock, periodNUptake, periodNIntake, periodAtmoNFix, periodSoilNEmissions];
 	}
 
 	////	Displays		////
@@ -119,7 +122,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		} else if myPlot.cellLUSimple = "Cropland" {
 			borderColourValue <- croplandColourValue;
 		} else {
-			borderColourValue <- #white;
+			borderColourValue <- rgb(102, 102, 102);
 		}
 
 		draw rectangle(cellWidth, cellHeight) color: nitrogenColor border: borderColourValue;

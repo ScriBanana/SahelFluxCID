@@ -8,7 +8,13 @@ Single run of experiment.
 model ExperimentRun
 
 import "main.gaml"
-grid secondaryGrid width: gridWidth height: gridHeight parallel: true;
+grid secondaryGrid width: gridWidth height: gridHeight parallel: true {
+
+	init {
+		color <- rgb(102, 102, 102);
+	}
+
+}
 
 experiment simulation type: gui {
 	output {
