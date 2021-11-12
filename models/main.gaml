@@ -141,7 +141,6 @@ global {
 		biomassContentSD <- standard_deviation(allCellsBiomass);
 	}
 
-	// Computing Ecological Network Anlysis indicators with N fluxes
 	reflex computeENAIndicators when: every(outputsComputationFreq) {
 		list<map> NFluxMatrix;
 		ask landscape where !each.nonGrazable {
