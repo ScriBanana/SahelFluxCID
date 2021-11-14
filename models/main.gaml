@@ -19,7 +19,8 @@ global {
 	float stockCUpdateFreq <- 1.0 #day;
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float outputsComputationFreq <- 1.0 #week;
-	float endDate <- 1.0 #month; // Dry season length
+	float endDate <- 8.0 #month; // Dry season length
+	bool batchSim <- false;
 	bool stopSim <- false;
 
 	// Inequalities exploration
@@ -141,7 +142,7 @@ global {
 						}
 
 						newParc <- newParc + 1;
-						if newParc mod 10 = 0 {
+						if newParc mod 10 = 0 and !batchSim {
 							write "	Paddocks placed : " + newParc;
 						}
 
@@ -152,7 +153,10 @@ global {
 			}
 
 			radiusIncrement <- radiusIncrement + cellWidth * 2;
-			write "		Scanned radius : " + round(sqrt(nbHerdsInit) * cellWidth + radiusIncrement) + " m";
+			if !batchSim {
+				write "		Scanned radius : " + round(sqrt(nbHerdsInit) * cellWidth + radiusIncrement) + " m";
+			}
+
 			assert radiusIncrement < sqrt(shape.height * shape.width); // Breaks the while loop
 		}
 
@@ -182,10 +186,14 @@ global {
 
 	// Break statement
 	reflex endSim when: time > endDate {
-		write "Dry season over, end of the simulation";
+		write "End of simulation";
 		do computeENAIndicators;
-		stopSim <- true;
-		do pause;
+		if batchSim {
+			stopSim <- true;
+		} else {
+			do pause;
+		}
+
 	}
 
 }
