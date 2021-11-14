@@ -24,5 +24,24 @@ global {
 		return closestColour;
 	}
 
+	map giniGenerator (int nbLists, int lengthLists, int maxValue) {
+		map<float, list> outputMat;
+		loop times: nbLists {
+			list<float> vect <- [];
+			loop times: lengthLists {
+				vect <+ rnd(maxValue);
+			}
+
+			outputMat <+ gini(vect)::vect;
+
+			//write "Gini indexes : " + outputMat.keys;
+ write "Nb lists = " + nbLists + ", lists length = " + lengthLists;
+			write "Gini indexes - Min : " + min(outputMat.keys) + ", mean : " + mean(outputMat.keys) + ", max : " + max(outputMat.keys);
+		}
+
+		return outputMat;
+	}
+
 }
+
 
