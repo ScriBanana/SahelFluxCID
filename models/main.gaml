@@ -20,6 +20,13 @@ global {
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float outputsComputationFreq <- 1.0 #week;
 	float endDate <- 1.0 #month; // Dry season length
+	bool stopSim <- false;
+
+	// Inequalities exploration
+	string parcelDistrib <- "NormalDist" among: ["Equity", "NormalDist", "GiniVect"];
+	// string herdDistrib among: ["Equity", "NormalDist", "GiniVect"];
+	list
+	vectGiniSizes <- [245.5464833043038, 223.35747861582468, 95.75988953731928, 19.694767606581188, 110.7781965225174, 46.88895560645675, 141.48199067354747, 172.5826868101815, 231.97740788005905, 9.871634884541091, 9.980317711513598, 189.60356034916396, 230.5794871128019, 111.98544942032184, 181.26810273182724, 6.837416752789971, 179.4094959828462, 104.81068646683968, 73.73521981433268, 256.08396935310486, 52.37841746146464, 273.2775951183603, 118.93572216394037, 45.46953291226, 110.10223790633351, 150.11558087052376, 22.92408602725342, 220.2242853801002, 108.27243846005584, 213.51610716946513, 210.6986574945393, 159.45299884611688, 223.43773945927688, 15.293668565456498, 13.774570249100314, 250.17096097992382, 17.41330935111912, 217.20640070266782, 251.99990676922263, 46.53036965480257, 27.806026442490108, 56.940073644609036, 92.57993480148107, 242.25521934025633, 74.62640333667417, 147.42470305356966, 41.030544567096825, 45.07551916990127, 114.2870833562322, 154.62442500469064, 46.43486791037341, 164.36487519990246, 227.55416263944795, 157.12951857634033, 30.124848550431725, 81.20375731041172, 5.0959688362942295, 47.15433817937703, 63.609650548908526, 15.733887926038815, 146.81304571644634, 72.15775599839755, 5.123123636609705, 162.91287827641327, 97.29873703245046, 30.36026663653687, 34.10023030372773, 169.52736124267406, 58.55853914962734, 5.15824281560584, 22.694923819657063, 250.05700994803976, 164.51106795184072, 93.57823912302536, 142.12801911925314, 175.9720196627706, 270.37131325650137, 38.84024391997657, 273.9720073474037, 57.07863104158608, 289.9677123537575, 244.61421284952254, 8.51579101234492, 292.1465592589691]; //TODO
 
 	// landscape parameters
 	float maxCropBiomassContentHa <- 351.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
@@ -74,28 +81,53 @@ global {
 		}
 
 		// Creating herds and paddock instantiation
-		write "Placing paddocks";
+		write "Placing paddocks, distribution : " + parcelDistrib;
 		create herd number: nbHerdsInit;
 		int newParc <- 0;
 		float radiusIncrement <- 0.0;
 		loop while: newParc < nbHerdsInit {
 			loop cell over: shuffle(landscape where (each distance_to villageLocation <= (sqrt(nbHerdsInit) * cellWidth + radiusIncrement) and each.cellLUSimple = "Cropland" and
 			each.overlappingPaddock = nil)) {
-				float parcelSize <- gauss(meanParcelSize, SDParcelSize);
-				if empty((cell neighbors_at (parcelSize / 2) where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
-					if newParc < nbHerdsInit {
-						create nightPaddock {
+				if newParc < nbHerdsInit {
 
+				// Set parcel size according to inequality DoE
+					float parcelSize;
+					switch parcelDistrib {
+						match "Equity" {
+							parcelSize <- meanParcelSize;
+						}
+
+						match "NormalDist" {
+							parcelSize <- -1.0;
+							loop while: parcelSize < 0.0 {
+								parcelSize <- gauss(meanParcelSize, SDParcelSize);
+							}
+
+						}
+
+						match "GiniVect" {
+							parcelSize <- float(vectGiniSizes[newParc]);
+						}
+
+					}
+
+					if empty((cell neighbors_at (parcelSize / 2) where (each.overlappingPaddock != nil or each.cellLUSimple != "Cropland"))) { // Could probably be in the loop definition...
+						create nightPaddock {
 						// Plots attribution
+							mySize <- parcelSize;
 							myOriginCell <- cell;
 							myOriginCell.overlappingPaddock <- self;
 							self.myCells <+ myOriginCell;
+							self.nightsPerCellMap <+ myOriginCell::0;
 							location <- myOriginCell.location;
-							ask myOriginCell neighbors_at (parcelSize / 2) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
-								self.overlappingPaddock <- myself;
-								myself.myCells <+ self;
-								myself.nightsPerCellMap <+ self::0;
-							}
+							if parcelSize > sqrt(cellHeight * cellWidth) {
+								ask myOriginCell neighbors_at (parcelSize / 2) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
+									self.overlappingPaddock <- myself;
+									myself.myCells <+ self;
+									myself.nightsPerCellMap <+ self::0;
+								}
+
+							} // TODO fix to have 4 cells parcels some day
 
 							// Herds attribution
 							ask one_of(herd where (each.myPaddock = nil)) {
@@ -112,10 +144,10 @@ global {
 							write "	Paddocks placed : " + newParc;
 						}
 
-					} else {
-						break;
 					}
 
+				} else {
+					break;
 				}
 
 			}
@@ -150,9 +182,10 @@ global {
 	}
 
 	// Break statement
-	reflex stopSim when: time > endDate {
+	reflex endSim when: time > endDate {
 		write "Dry season over, end of the simulation";
 		do computeENAIndicators;
+		stopSim <- true;
 		do pause;
 	}
 
@@ -192,7 +225,7 @@ species nightPaddock {
 	list<landscape> myCells;
 	map<landscape, int> nightsPerCellMap;
 	herd myHerd;
-
+	float mySize; // TODO
 	aspect default {
 		ask myCells {
 			draw rectangle(cellWidth, cellHeight) color: #transparent border: myself.myHerd.herdColour;

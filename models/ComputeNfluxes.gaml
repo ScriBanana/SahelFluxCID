@@ -12,8 +12,7 @@ import "main.gaml"
 global {
 
 // Compute nitrogen flux in a global matrix
- map<string, float>
-	croplandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
+	map<string, float> croplandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
 	map<string, float> rangelandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
 	map<string, map> NFluxMatrix <- ["croplandCells"::croplandNFluxMatrix, "rangelandCells"::rangelandNFluxMatrix, "herds"::["varHerdsNStock"::0.0]];
 
@@ -35,13 +34,11 @@ global {
 		float
 		varHerdsNStock <- float(NFluxMatrix["herds"]["varHerdsNStock"]) + croplandNFluxMatrix["periodNUptake"] + rangelandNFluxMatrix["periodNUptake"] - croplandNFluxMatrix["periodNIntake"] - rangelandNFluxMatrix["periodNIntake"];
 		NFluxMatrix["herds"] <- ["varHerdsNStock"::varHerdsNStock]; //TODO ugly
- write "croplandCells : " + croplandNFluxMatrix;
-		write "rangelandCells : " + rangelandNFluxMatrix;
-		write "herds : " + NFluxMatrix["herds"];
+
 	}
 
 	// Compute global ENA indicators at the end of the simulation (Stark, 2016; Balandier, 2017, Latham, 2006)
- float TT;
+	float TT;
 	float TST;
 	float ICR;
 

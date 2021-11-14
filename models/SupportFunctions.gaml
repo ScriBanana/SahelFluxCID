@@ -10,7 +10,7 @@ model SupportFunctions
 global {
 	rgb eucliClosestColour (rgb colourToCompare, list<rgb> colourPalette) {
 	// Compares a colour (rgb) to those of a list of colours and returns the index in the list of the closest colour (euclidian distance)
- rgb closestColour;
+		rgb closestColour;
 		float shortestDist <- 3 ^ (1 / 2) * 255.0;
 		loop refColour over: colourPalette {
 			float rgbEucliDist <- ((refColour.red - colourToCompare.red) ^ 2 + (refColour.green - colourToCompare.green) ^ 2 + (refColour.blue - colourToCompare.blue) ^ 2) ^ (1 / 2);
@@ -22,24 +22,6 @@ global {
 		}
 
 		return closestColour;
-	}
-
-	map giniGenerator (int nbLists, int lengthLists, int maxValue) {
-		map<float, list> outputMat;
-		loop times: nbLists {
-			list<float> vect <- [];
-			loop times: lengthLists {
-				vect <+ rnd(maxValue);
-			}
-
-			outputMat <+ gini(vect)::vect;
-
-			//write "Gini indexes : " + outputMat.keys;
- write "Nb lists = " + nbLists + ", lists length = " + lengthLists;
-			write "Gini indexes - Min : " + min(outputMat.keys) + ", mean : " + mean(outputMat.keys) + ", max : " + max(outputMat.keys);
-		}
-
-		return outputMat;
 	}
 
 }

@@ -14,7 +14,7 @@ global {
 	int lengthLists <- 84;
 	float mean <- 20.0;
 	float sd <- 2.0;
-	float maxValue <- 30.0;
+	float maxValue <- 300.0;
 	map<float, list> outputMat;
 
 	init {
@@ -23,7 +23,7 @@ global {
 			list<float> vect <- [];
 			loop times: lengthLists {
 			//	vect <+ gauss(mean, sd);
- vect <+ rnd(maxValue);
+				vect <+ rnd(maxValue);
 			}
 
 			outputMat <+ gini(vect)::vect;
@@ -31,12 +31,11 @@ global {
 
 		write "Saving";
 		//write "Gini indexes : " + outputMat.keys;
- write "Nb lists = " + nbLists + ", lists length = " + lengthLists;
+		write "Nb lists = " + nbLists + ", lists length = " + lengthLists;
 		write "Gini indexes - Min : " + min(outputMat.keys) + ", mean : " + mean(outputMat.keys) + ", median : " + median(outputMat.keys) + ", max : " + max(outputMat.keys);
 
 		// Save nbLinesSaved lines
- save ["Gini index", "Value vector"] to: ("../includes/GiniVectorsN" + nbLists + "n" + nbListsSaved + "m" + lengthLists + ".csv") type: "csv" header:
-		false rewrite: true;
+		save ["Gini index", "Value vector"] to: ("../includes/GiniVectorsN" + nbLists + "n" + nbListsSaved + "m" + lengthLists + ".csv") type: "csv" header: false rewrite: true;
 		list sortedMatKeys <- outputMat.keys sort_by (each);
 		list sortedMatKeysInvert <- outputMat.keys sort_by (-each);
 		loop i from: 0 to: nbListsSaved / 2 - 1 {
