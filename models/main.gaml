@@ -9,6 +9,7 @@ model SahelFlux
 import "ImportZoning.gaml" // Sets the grid land uses according to a raster.
 import "StockFlows.gaml" // Soil biophysical processes.
 import "HerdsBehaviour.gaml" // Herds behaviour and movement.
+import "ComputeNfluxes.gaml" // N fluxes and ENA indicators.
 import "ExperimentRun.gaml" // Experiment file
 global {
 //	// Simulation parameters
@@ -17,8 +18,8 @@ global {
 	float visualUpdate <- 1.0 #week; // For all but the main display
 	float stockCUpdateFreq <- 1.0 #day;
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
-	float outputsComputationFreq <- 1.0 #month;
-	float endDate <- 8.0 #month; // Dry season length
+	float outputsComputationFreq <- 1.0 #week;
+	float endDate <- 1.0 #month; // Dry season length
 
 	// landscape parameters
 	float maxCropBiomassContentHa <- 351.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
@@ -127,11 +128,18 @@ global {
 		write "End of init";
 	}
 
+	// Weekly print
+	reflex weekPrompt when: every(#week) {
+		write string(date(time), "'Week 'w");
+	}
+
 	// Some global state variables
 	float meanBiomassContent;
 	float biomassContentSD;
 
 	reflex updateSomeGlobalVariables when: every(biophysicalProcessesUpdateFreq) {
+
+	//	// Aggregation of biomass content for herds behaviours
 		list<float> allCellsBiomass;
 		ask landscape where (!each.nonGrazable) {
 			allCellsBiomass <+ self.biomassContent;
@@ -141,44 +149,10 @@ global {
 		biomassContentSD <- standard_deviation(allCellsBiomass);
 	}
 
-	reflex computeENAIndicators when: every(outputsComputationFreq) {
-		map<string, float> croplandNFluxMatrix <- ["varCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
-		map<string, float> rangelandNFluxMatrix <- ["varCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
-		ask plotStockFlowMecanisms {
-			loop fluxKey over: self.cellNFluxMatrix.keys {
-				if self.myPlot.cellLUSimple = "Rangeland" {
-					rangelandNFluxMatrix[fluxKey] <- rangelandNFluxMatrix[fluxKey] + self.cellNFluxMatrix[fluxKey];
-				} else if self.myPlot.cellLUSimple = "Cropland" {
-					croplandNFluxMatrix[fluxKey] <- croplandNFluxMatrix[fluxKey] + self.cellNFluxMatrix[fluxKey];
-				}
-
-			}
-
-		}
-
-		map<string, float>
-		NFluxMatrix <- ["varCropCellsNstock"::0.0, "cropCellsNUptake"::0.0, "cropCellsNIntake"::0.0, "cropCellsAtmoNFix"::0.0, "cropCellsSoilNEmissions"::0.0, "varRangeCellsNstock"::0.0, "rangeCellsNUptake"::0.0, "rangeCellsNIntake"::0.0, "rangeCellsAtmoNFix"::0.0, "rangeCellsSoilNEmissions"::0.0, "varHerdsNStock"::0.0];
-		loop i from: 0 to: length(NFluxMatrix) - 1 {
-			if i < length(croplandNFluxMatrix) {
-				NFluxMatrix[NFluxMatrix.keys[i]] <- croplandNFluxMatrix.values[i];
-			} else if i < length(croplandNFluxMatrix) + length(rangelandNFluxMatrix) {
-				NFluxMatrix[NFluxMatrix.keys[i]] <- rangelandNFluxMatrix.values[i];
-			}
-
-		}
-
-		NFluxMatrix["varHerdsNStock"] <- NFluxMatrix["cropCellsNUptake"] + NFluxMatrix["rangeCellsNUptake"] - NFluxMatrix["cropCellsNIntake"] - NFluxMatrix["rangeCellsNIntake"];
-		write NFluxMatrix;
-	}
-
-	// Weekly print
-	reflex weekPrompt when: every(#week) {
-		write string(date(time), "'Week 'w");
-	}
-
 	// Break statement
 	reflex stopSim when: time > endDate {
 		write "Dry season over, end of the simulation";
+		do computeENAIndicators;
 		do pause;
 	}
 
