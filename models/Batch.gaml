@@ -40,6 +40,7 @@ global {
 
 experiment batchICRGini autorun: true type: batch repeat: 28 until: stopSim {
 	string outputFilePathAndName <- "../includes/SFCID_BatchOutput_h20p20r28l1M.csv";
+	string outputFluxMatFilePathAndName <- "../includes/SFCID_BatchOutput_h20p20r28l1M_FluxMats.csv";
 	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 19 step: 1;
 	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 19 step: 1;
 	// Max has to be set up manually to giniMatrix.rows - 1
@@ -52,12 +53,14 @@ experiment batchICRGini autorun: true type: batch repeat: 28 until: stopSim {
 
 	reflex updateGiniVect {
 	// Previous batch conclusion
+		write "End of run number : " + runNb;
+		list<list<float>> simNFluxLists <- simulations collect each.NFluxList; // TODO mean direct dans le code...
 		float meanTT <- mean(simulations collect each.TT);
 		float meanTST <- mean(simulations collect each.TST);
 		float meanICR <- mean(simulations collect each.ICR);
-		write "End of run number : " + runNb;
 		write "	Parcel gini index : " + giniMap.keys[parcelGiniIndex] + ", herd gini index : " + giniMap.keys[herdGiniIndex] + ", mean ICR : " + meanICR;
 		save [runNb, giniMap.keys[parcelGiniIndex], giniMap.keys[herdGiniIndex], meanTT, meanTST, meanICR] to: (outputFilePathAndName) type: "csv" header: false rewrite: false;
+		save [runNb, simNFluxLists] to: (outputFluxMatFilePathAndName) type: "csv" header: false rewrite: false;
 		runNb <- runNb + 1;
 	}
 
