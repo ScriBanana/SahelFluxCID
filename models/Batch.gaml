@@ -9,7 +9,7 @@ model Batch
 import "main.gaml"
 
 global {
-	csv_file giniFile <- csv_file("../includes/GiniVectors_N10000n2l84.csv");
+	csv_file giniFile <- csv_file("../includes/GiniVectors_N10000000n20l84.csv");
 	matrix giniMatrix <- matrix(giniFile);
 	map<float, list<float>> giniMap;
 	int parcelGiniIndex <- 0; // Has to be inited
@@ -27,9 +27,9 @@ global {
 
 		// Sim init
 		batchSim <- true;
-		endDate <- 3.0 #days;
+		endDate <- 1.0 #month;
 		biophysicalProcessesUpdateFreq <- 1.0 #days;
-		outputsComputationFreq <- 1.0 #days;
+		outputsComputationFreq <- 1.0 #week;
 		parcelDistrib <- "GiniVect";
 		herdDistrib <- "GiniVect";
 		vectGiniParcels <- giniMap.values[parcelGiniIndex] collect (each * meanParcelSize * 2);
@@ -38,10 +38,10 @@ global {
 
 }
 
-experiment batchICRGini autorun: true type: batch repeat: 4 until: stopSim {
-	string outputFilePathAndName <- "../includes/SFCID_BatchOutput_h20p20r28l1m.csv";
-	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 1 step: 1;
-	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 1 step: 1;
+experiment batchICRGini autorun: true type: batch repeat: 28 until: stopSim {
+	string outputFilePathAndName <- "../includes/SFCID_BatchOutput_h20p20r28l1M.csv";
+	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 19 step: 1;
+	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 19 step: 1;
 	// Max has to be set up manually to giniMatrix.rows - 1
 	init {
 		write "Starting batch";
