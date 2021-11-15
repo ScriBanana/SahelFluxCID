@@ -9,7 +9,7 @@ model Batch
 import "main.gaml"
 
 global {
-	csv_file giniFile <- csv_file("../includes/GiniVectorsN1000n100m84.csv");
+	csv_file giniFile <- csv_file("../includes/GiniVectorsN1000000n50m84.csv");
 	matrix giniMatrix <- matrix(giniFile);
 	map<float, list<float>> giniMap;
 	int parcelGiniIndex <- 0; // Has to be inited
