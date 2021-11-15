@@ -14,7 +14,7 @@ global {
 	int lengthLists <- 84;
 	float mean <- 20.0;
 	float sd <- 2.0;
-	float maxValue <- 300.0;
+	float maxValue <- 200.0; // mean will be 100.0
 	map<float, list> outputMat;
 
 	init {

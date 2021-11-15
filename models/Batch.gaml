@@ -11,8 +11,8 @@ import "main.gaml"
 global {
 	csv_file giniFile <- csv_file("../includes/GiniVectorsN1000n100m84.csv");
 	matrix giniMatrix <- matrix(giniFile);
-	map<float, list> giniMap;
-	float parcelGini;
+	map<float, list<float>> giniMap;
+	int parcelGiniIndex;
 
 	init {
 	// Reform gini map
@@ -25,29 +25,28 @@ global {
 			giniMap <+ giniMatrix[0, matRow]::sizeVect;
 		}
 
+		// Sim init
 		parcelDistrib <- "GiniVect";
 		batchSim <- true;
 		endDate <- 2.0 #week;
-		vectGiniSizes <- giniMap[parcelGini];
+		vectGiniSizes <- giniMap.values[parcelGiniIndex];
 	}
 
 }
 
 experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 	int runNb <- 1;
-
+	parameter "Gini index - parcel sizes" var: parcelGiniIndex init: 0 min: 0 max: 99; // Has to be set up manually to giniMatrix.rows - 1
 	init {
-		write "Launching batch";
+		write "Starting batch";
 	}
-
-	parameter "Gini index - parcel sizes" init: (giniMap.keys sort_by each)[0] var: parcelGini among: giniMap.keys sort_by each;
 
 	reflex updateGiniVect {
 	// Previous batch conclusion
 		float meanICR <- mean(simulations collect each.ICR);
 		write "End of run number : " + runNb;
-		write "	Gini index : " + parcelGini + ", mean ICR : " + meanICR;
-		save [runNb, parcelGini, meanICR] to: ("../includes/OutputsExploParcels.csv") type: "csv" header: true rewrite: false;
+		write "	Gini index : " + giniMap.keys[parcelGiniIndex] + ", mean ICR : " + meanICR;
+		save [runNb, giniMap.keys[parcelGiniIndex], meanICR] to: ("../includes/OutputsExploParcels.csv") type: "csv" header: true rewrite: false;
 	}
 
 }
