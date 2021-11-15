@@ -83,6 +83,10 @@ global {
 
 		// Creating herds and paddock instantiation
 		write "Placing paddocks, distribution : " + parcelDistrib;
+		if parcelDistrib = "GiniVect" {
+			write "Gini control : " + gini(vectGiniSizes);
+		}
+
 		create herd number: nbHerdsInit;
 		int newParc <- 0;
 		float radiusIncrement <- 0.0;
@@ -109,7 +113,6 @@ global {
 
 						match "GiniVect" {
 							parcelSize <- float(vectGiniSizes[newParc]);
-							write "Gini control : " + gini(vectGiniSizes);
 						}
 
 					}
