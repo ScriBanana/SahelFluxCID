@@ -36,7 +36,7 @@ global {
 
 }
 
-experiment batchICRGini autorun: true type: batch repeat: 16 until: stopSim parallel: true {
+experiment batchICRGini autorun: true type: batch repeat: 28 until: stopSim parallel: true {
 	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 49 step: 1;
 	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 49 step: 1;
 	// Max has to be set up manually to giniMatrix.rows - 1
