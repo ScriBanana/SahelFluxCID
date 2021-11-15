@@ -10,7 +10,7 @@ model GenerGini
 
 global {
 	int nbLists <- 1000000;
-	int nbListsSaved <- 20;
+	int nbListsSaved <- 50;
 	int lengthLists <- 84;
 	float mean <- 20.0;
 	float sd <- 2.0;
