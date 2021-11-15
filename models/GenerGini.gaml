@@ -9,17 +9,21 @@
 model GenerGini
 
 global {
-	int nbLists <- 1000000;
-	int nbListsSaved <- 50;
+	int nbLists <- 10000000;
+	int nbListsSaved <- 20;
 	int lengthLists <- 84;
 	float mean <- 20.0;
 	float sd <- 2.0;
-	float maxValue <- 200.0; // mean will be half
+	float maxValue <- 1.0;
 	map<float, list> outputMat;
 
 	init {
 		write "Generating";
-		loop times: nbLists {
+		loop i from: 1 to: nbLists {
+			if i mod 1000000 = 0 {
+				write "	" + i;
+			}
+
 			list<float> vect <- [];
 			loop times: lengthLists {
 			//	vect <+ gauss(mean, sd);
@@ -31,11 +35,11 @@ global {
 
 		write "Saving";
 		//write "Gini indexes : " + outputMat.keys;
-		write "Nb lists = " + nbLists + ", lists length = " + lengthLists;
+		write "Total nb lists = " + nbLists + ", nb lists picked : " + nbListsSaved + ", lists length = " + lengthLists;
 		write "Gini indexes - Min : " + min(outputMat.keys) + ", mean : " + mean(outputMat.keys) + ", median : " + median(outputMat.keys) + ", max : " + max(outputMat.keys);
 
 		// Save nbLinesSaved lines
-		save ["Gini index", "Value vector"] to: ("../includes/GiniVectorsN" + nbLists + "n" + nbListsSaved + "m" + lengthLists + ".csv") type: "csv" header: false rewrite: true;
+		save ["Gini index", "Value vector"] to: ("../includes/GiniVectors_N" + nbLists + "n" + nbListsSaved + "l" + lengthLists + ".csv") type: "csv" header: false rewrite: true;
 		list sortedMatKeys <- outputMat.keys sort_by (each);
 		list sortedMatKeysInvert <- outputMat.keys sort_by (-each);
 		loop i from: 0 to: nbListsSaved / 2 - 1 {
@@ -53,8 +57,8 @@ global {
 				vectToSaveInv <+ float(valueInv);
 			}
 
-			save vectToSave to: ("../includes/GiniVectorsN" + nbLists + "n" + nbListsSaved + "m" + lengthLists + ".csv") type: "csv" header: false rewrite: false;
-			save vectToSaveInv to: ("../includes/GiniVectorsN" + nbLists + "n" + nbListsSaved + "m" + lengthLists + ".csv") type: "csv" header: false rewrite: false;
+			save vectToSave to: ("../includes/GiniVectors_N" + nbLists + "n" + nbListsSaved + "l" + lengthLists + ".csv") type: "csv" header: false rewrite: false;
+			save vectToSaveInv to: ("../includes/GiniVectors_N" + nbLists + "n" + nbListsSaved + "l" + lengthLists + ".csv") type: "csv" header: false rewrite: false;
 		}
 
 		write "Done";
@@ -62,5 +66,4 @@ global {
 
 }
 
-experiment run type: gui {
-}
+experiment run;

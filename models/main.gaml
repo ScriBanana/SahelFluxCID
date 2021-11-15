@@ -16,7 +16,7 @@ global {
 	float step <- 30.0 #minutes;
 	float yearToStep <- step / 1.0 #year;
 	float visualUpdate <- 1.0 #week; // For all but the main display
-	float stockCUpdateFreq <- 1.0 #day;
+	//	float stockCUpdateFreq <- 1.0 #day;
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float outputsComputationFreq <- 1.0 #week;
 	float endDate <- 8.0 #month; // Dry season length
@@ -91,7 +91,7 @@ global {
 
 		if herdDistrib = "Equity" {
 			create herd number: nbHerdsInit {
-				herdSize <- meanHerdSize;
+				herdSize <- round(meanHerdSize);
 			}
 
 		} else {
@@ -121,6 +121,7 @@ global {
 
 		}
 
+		write "	NBHerds : " + herd sum_of each.herdSize;
 		// Paddock instantiation
 		write "	Placing paddocks, distribution : " + parcelDistrib;
 		if parcelDistrib = "GiniVect" {
