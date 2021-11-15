@@ -14,7 +14,7 @@ global {
 	int lengthLists <- 84;
 	float mean <- 20.0;
 	float sd <- 2.0;
-	float maxValue <- 200.0; // mean will be 100.0
+	float maxValue <- 200.0; // mean will be half
 	map<float, list> outputMat;
 
 	init {
@@ -62,5 +62,5 @@ global {
 
 }
 
-experiment sim type: gui {
+experiment run type: gui {
 }

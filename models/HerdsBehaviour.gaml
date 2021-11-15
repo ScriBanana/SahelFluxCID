@@ -11,8 +11,8 @@ import "main.gaml"
 
 global {
 	int nbHerdsInit <- 84; // (Grillot et al, 2018)
-	int herdSize <- round(gauss(3.7, 0.2)); // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
-
+	float meanHerdSize <- 3.7; // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
+	float SDHerdSize <- 0.2; // TLU (Grillot et al, 2018)
 	// Behaviour
 	int wakeUpTime <- 8; // Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
 	int eveningTime <- 19;
@@ -23,11 +23,8 @@ global {
 
 	// Zootechnical data
 	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
-	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
 	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float IIRRangelandHerd <- IIRRangelandTLU / 1000 * step / #minute * herdSize;
 	float IIRCroplandTLU <- 10.9; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float IIRCroplandHerd <- IIRCroplandTLU / 1000 * step / #minute * herdSize;
 	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
 	float ratioExcretionIngestion <- 0.55;
 	// Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
@@ -38,12 +35,17 @@ global {
 
 species herd control: fsm skills: [moving] {
 	rgb herdColour <- rnd_color(255);
+	int herdSize; // TLU
+
 
 	// Paddocking parameters and variables
 	nightPaddock myPaddock <- nil;
 	landscape currentSleepSpot;
 
-	// Grazing variables
+	// Grazing parameters and variables
+	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
+	float IIRRangelandHerd <- IIRRangelandTLU / 1000 * step / #minute * herdSize;
+	float IIRCroplandHerd <- IIRCroplandTLU / 1000 * step / #minute * herdSize;
 	map<float, float> chymeChunksMap;
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyIntakeRatePerHerd);

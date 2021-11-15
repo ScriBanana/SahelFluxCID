@@ -13,6 +13,7 @@ global {
 	matrix giniMatrix <- matrix(giniFile);
 	map<float, list<float>> giniMap;
 	int parcelGiniIndex <- 0; // Has to be inited
+	int herdGiniIndex <- 0; // Has to be inited
 	init {
 	//	// Reform gini map
 		loop matRow from: 0 to: giniMatrix.rows - 1 {
@@ -25,16 +26,20 @@ global {
 		}
 
 		// Sim init
-		parcelDistrib <- "GiniVect";
 		batchSim <- true;
-		endDate <- 2.0 #week;
-		vectGiniSizes <- giniMap.values[parcelGiniIndex];
+		endDate <- 2.0 #month;
+		parcelDistrib <- "GiniVect";
+		herdDistrib <- "GiniVect";
+		vectGiniParcels <- giniMap.values[parcelGiniIndex];
+		vectGiniHerds <- giniMap.values[herdGiniIndex];
 	}
 
 }
 
-experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
-	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 99 step: 1; // Max has to be set up manually to giniMatrix.rows - 1
+experiment batchICRGini autorun: false type: batch repeat: 16 until: stopSim {
+	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 49 step: 1;
+	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 49 step: 1;
+	// Max has to be set up manually to giniMatrix.rows - 1
 	init {
 		write "Starting batch";
 	}
@@ -43,10 +48,13 @@ experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 
 	reflex updateGiniVect {
 	// Previous batch conclusion
+		float meanTT <- mean(simulations collect each.TT);
+		float meanTST <- mean(simulations collect each.TST);
 		float meanICR <- mean(simulations collect each.ICR);
 		write "End of run number : " + runNb;
-		write "	Gini index : " + giniMap.keys[parcelGiniIndex] + ", mean ICR : " + meanICR;
-		save [runNb, giniMap.keys[parcelGiniIndex], meanICR] to: ("../includes/OutputsExploParcels.csv") type: "csv" header: true rewrite: false;
+		write "	Parcel gini index : " + giniMap.keys[parcelGiniIndex] + ", herd gini index : " + giniMap.keys[herdGiniIndex] + ", mean ICR : " + meanICR;
+		save [runNb, giniMap.keys[parcelGiniIndex], giniMap.keys[herdGiniIndex], meanTT, meanTST, meanICR] to: ("../includes/GiniVectorsN1000000n50m84.csv") type: "csv" header: true
+		rewrite: false;
 		runNb <- runNb + 1;
 	}
 
