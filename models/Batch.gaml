@@ -14,8 +14,7 @@ global {
 	map<float, list<float>> giniMap;
 	int parcelGiniIndex <- 0; // Has to be inited
 	init {
-		write "init check";
-		// Reform gini map
+	//	// Reform gini map
 		loop matRow from: 0 to: giniMatrix.rows - 1 {
 			list<float> sizeVect;
 			loop matCol from: 1 to: giniMatrix.columns - 1 {
@@ -35,7 +34,7 @@ global {
 }
 
 experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
-	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 99; // Max has to be set up manually to giniMatrix.rows - 1
+	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 99 step: 1; // Max has to be set up manually to giniMatrix.rows - 1
 	init {
 		write "Starting batch";
 	}
