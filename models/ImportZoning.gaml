@@ -26,8 +26,8 @@ global {
 	// suits for zoningLRAudouin15Diohine
 	float meanParcelArea <- 10000.0 #m2; // Satellite survey.
 	float SDParcelArea <- 2500 #m2; // For normal distribution. Random value
-	float meanParcelSize <- sqrt(meanParcelArea);
-	float SDParcelSize <- sqrt(SDParcelSize);
+	float meanParcelSize <- sqrt(meanParcelArea); // Unused if Gini
+	float SDParcelSize <- sqrt(SDParcelSize); // Unused if Gini
 	int gridHeight <- gridLayout.contents.rows;
 	int gridWidth <- gridLayout.contents.columns;
 	float cellHeight <- shape.height / gridHeight;

@@ -11,25 +11,29 @@ experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 	int runNb <- 1;
 	csv_file giniFile <- csv_file("../includes/GiniVectorsN1000n100m84.csv");
 	matrix giniMatrix <- matrix(giniFile);
-	list<float> giniList <- giniMatrix column_at 0;
-	float parcelGini <- giniList[1]; // Avoid header, should be the smallest index despite sort in init
-	list simuVectGiniSizes;
-
+	map<float, list> giniMap;
+	float parcelGini <- (giniMatrix column_at 0)[1]; // Avoid header
 	init {
-		giniList >- first(giniList);
-		giniList <- giniList sort_by each;
+	// Reform gini map
+		loop matRow from: 0 to: giniMatrix.rows - 1 {
+			list<float> sizeVect;
+			loop matCol from: 1 to: giniMatrix.columns - 1 {
+				sizeVect <+ float(giniMatrix[matCol, matRow]);
+			}
+
+			giniMap <+ giniMatrix[0, matRow]::sizeVect;
+		}
+
 		write "Launching batch";
 
 		// Init first batch
 		parcelDistrib <- "GiniVect";
 		batchSim <- true;
 		endDate <- 2.0 #week;
-		simuVectGiniSizes <- giniMatrix row_at runNb; // Avoid header
-		simuVectGiniSizes >- first(simuVectGiniSizes);
-		vectGiniSizes <- simuVectGiniSizes;
+		vectGiniSizes <- giniMap[parcelGini];
 	}
 
-	parameter "Gini index - parcel sizes" var: parcelGini among: giniList;
+	parameter "Gini index - parcel sizes" var: parcelGini among: giniMap.keys sort_by each;
 
 	reflex updateGiniVect {
 	// Previous batch conclusion
@@ -44,9 +48,7 @@ experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 		parcelDistrib <- "GiniVect";
 		batchSim <- true;
 		endDate <- 2.0 #week;
-		simuVectGiniSizes <- giniMatrix row_at runNb;
-		simuVectGiniSizes >- first(simuVectGiniSizes);
-		vectGiniSizes <- simuVectGiniSizes;
+		vectGiniSizes <- giniMap[parcelGini];
 	}
 
 }

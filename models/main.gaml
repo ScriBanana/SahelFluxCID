@@ -37,7 +37,7 @@ global {
 
 	// Initiation
 	init {
-		write "Reading input raster";
+		write "	Reading input raster";
 		loop cell over: landscape {
 
 		// LU attribution according to colour (see ImportZoning.gaml)
@@ -82,9 +82,9 @@ global {
 		}
 
 		// Creating herds and paddock instantiation
-		write "Placing paddocks, distribution : " + parcelDistrib;
+		write "	Placing paddocks, distribution : " + parcelDistrib;
 		if parcelDistrib = "GiniVect" {
-			write "Gini control : " + gini(vectGiniSizes);
+			write "		Gini control : " + gini(vectGiniSizes);
 		}
 
 		create herd number: nbHerdsInit;
@@ -147,7 +147,7 @@ global {
 
 						newParc <- newParc + 1;
 						if newParc mod 10 = 0 and !batchSim {
-							write "	Paddocks placed : " + newParc;
+							write "		Paddocks placed : " + newParc;
 						}
 
 					}
@@ -158,18 +158,18 @@ global {
 
 			radiusIncrement <- radiusIncrement + cellWidth * 2;
 			if !batchSim {
-				write "		Scanned radius : " + round(sqrt(nbHerdsInit) * cellWidth + radiusIncrement) + " m";
+				write "			Scanned radius : " + round(sqrt(nbHerdsInit) * cellWidth + radiusIncrement) + " m";
 			}
 
 			assert radiusIncrement < sqrt(shape.height * shape.width); // Breaks the while loop
 		}
 
-		write "End of init";
+		write "	End of init";
 	}
 
 	// Weekly print
 	reflex weekPrompt when: every(#week) {
-		write string(date(time), "'Week 'w");
+		write string(date(time), "'		Week 'w");
 	}
 
 	// Some global state variables
@@ -190,7 +190,7 @@ global {
 
 	// Break statement
 	reflex endSim when: time > endDate {
-		write "End of simulation";
+		write "	End of simulation";
 		do computeENAIndicators;
 		if batchSim {
 			stopSim <- true;

@@ -47,9 +47,9 @@ global {
 		TST <-
 		TT + croplandNFluxMatrix["periodVarCellNstock"] + croplandNFluxMatrix["periodAtmoNFix"] + rangelandNFluxMatrix["periodVarCellNstock"] + rangelandNFluxMatrix["periodAtmoNFix"] + float(NFluxMatrix["herds"]["varHerdsNStock"]);
 		ICR <- TT / TST;
-		write "TT : " + TT / hectareToCell + " kgN/ha/length of sim";
-		write "TST : " + TST / hectareToCell + " kgN/ha/length of sim";
-		write "ICR : " + ICR;
+		write "		TT : " + TT / hectareToCell + " kgN/ha/length of sim";
+		write "		TST : " + TST / hectareToCell + " kgN/ha/length of sim";
+		write "		ICR : " + ICR;
 	}
 
 }
