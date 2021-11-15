@@ -11,12 +11,13 @@ experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 	int runNb <- 1;
 	csv_file giniFile <- csv_file("../includes/GiniVectorsN1000n100m84.csv");
 	matrix giniMatrix <- matrix(giniFile);
-	list<float> giniList <- matrix(giniMatrix) column_at 0;
-	float parcelGini <- giniList[1]; // Avoid header
+	list<float> giniList <- giniMatrix column_at 0;
+	float parcelGini <- giniList[1]; // Avoid header, should be the smallest index despite sort in init
 	list simuVectGiniSizes;
 
 	init {
 		giniList >- first(giniList);
+		giniList <- giniList sort_by each;
 		write "Launching batch";
 
 		// Init first batch
@@ -39,6 +40,7 @@ experiment batchICRGini autorun: false type: batch repeat: 4 until: stopSim {
 
 		// New batch init
 		runNb <- runNb + 1;
+		write "Init batch " + runNb + ", gini index : " + parcelGini;
 		parcelDistrib <- "GiniVect";
 		batchSim <- true;
 		endDate <- 2.0 #week;
