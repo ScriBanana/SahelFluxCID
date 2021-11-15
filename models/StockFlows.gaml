@@ -73,6 +73,10 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 			periodOMIntake <- periodOMIntake + myPlot.depositedOMMap at OMDepositDate;
 		}
 
+		if !batchSim {
+			myPlot.depositedOMMap <- [];
+		}
+
 		lastNitrogenUpdateDate <- time;
 		float periodExcretionsNIntake <- periodOMIntake * fecesNContent;
 		float periodUrineNIntake <- periodExcretionsNIntake * ratioUrineNFecesN;

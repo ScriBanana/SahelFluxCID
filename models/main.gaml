@@ -19,7 +19,7 @@ global {
 	//	float stockCUpdateFreq <- 1.0 #day;
 	float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float outputsComputationFreq <- 1.0 #week;
-	float endDate <- 8.0 #month; // Dry season length
+	float endDate <- 1.0 #month; //8.0 #month; // Dry season length
 	bool batchSim <- false;
 	bool stopSim <- false;
 
@@ -110,7 +110,6 @@ global {
 
 		}
 
-		write "	NBHerds : " + herd sum_of each.herdSize;
 		// Paddock instantiation
 		write "	Placing paddocks, distribution : " + parcelDistrib;
 		if parcelDistrib = "GiniVect" {
@@ -245,7 +244,7 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	plotStockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent min: 0.0 max: max(maxCropBiomassContent, maxRangelandBiomassContent);
 	float initialBiomassContent;
-	map<float, float> depositedOMMap; // TODO Crop periodically to save memory space?
+	map<float, float> depositedOMMap; //TODO ajouter cumul pour la carte;
 
 	// Colouring
 	reflex updateColour when: !nonGrazable {

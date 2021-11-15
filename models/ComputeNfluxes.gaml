@@ -44,8 +44,10 @@ global {
 
 	action computeENAIndicators {
 		TT <- sum(croplandNFluxMatrix["periodNUptake"], croplandNFluxMatrix["periodNIntake"], rangelandNFluxMatrix["periodNUptake"], rangelandNFluxMatrix["periodNIntake"]);
-		TST <-
-		TT + croplandNFluxMatrix["periodVarCellNstock"] + croplandNFluxMatrix["periodAtmoNFix"] + rangelandNFluxMatrix["periodVarCellNstock"] + rangelandNFluxMatrix["periodAtmoNFix"] + float(NFluxMatrix["herds"]["varHerdsNStock"]);
+		float cropNVarIfNeg <- croplandNFluxMatrix["periodVarCellNstock"] < 0 ? croplandNFluxMatrix["periodVarCellNstock"] : 0.0;
+		float rangeNVarIfNeg <- rangelandNFluxMatrix["periodVarCellNstock"] < 0 ? rangelandNFluxMatrix["periodVarCellNstock"] : 0.0;
+		float herdsNVarIfNeg <- float(NFluxMatrix["herds"]["varHerdsNStock"]) < 0 ? float(NFluxMatrix["herds"]["varHerdsNStock"]) : 0.0;
+		TST <- TT + croplandNFluxMatrix["periodAtmoNFix"] + rangelandNFluxMatrix["periodAtmoNFix"] - cropNVarIfNeg - rangeNVarIfNeg - herdsNVarIfNeg;
 		ICR <- TT / TST;
 		write "		TT : " + TT / hectareToCell + " kgN/ha";
 		write "		TST : " + TST / hectareToCell + " kgN/ha";
