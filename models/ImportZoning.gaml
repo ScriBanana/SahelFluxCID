@@ -24,8 +24,10 @@ global {
 	geometry shape <- rectangle(4980 #m, 6140 #m); // suits for zoningLRAudouin15Diohine
 	point villageLocation <- point(3294, 2993);
 	// suits for zoningLRAudouin15Diohine
-	float meanParcelSize <- 100.0 #m; // Satellite survey.
-	float SDParcelSize <- 50.0 #m; // For normal distribution. Random value
+	float meanParcelArea <- 10000.0 #m2; // Satellite survey.
+	float SDParcelArea <- 2500 #m2; // For normal distribution. Random value
+	float meanParcelSize <- sqrt(meanParcelArea);
+	float SDParcelSize <- sqrt(SDParcelSize);
 	int gridHeight <- gridLayout.contents.rows;
 	int gridWidth <- gridLayout.contents.columns;
 	float cellHeight <- shape.height / gridHeight;

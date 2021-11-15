@@ -109,6 +109,7 @@ global {
 
 						match "GiniVect" {
 							parcelSize <- float(vectGiniSizes[newParc]);
+							write "Gini control : " + gini(vectGiniSizes);
 						}
 
 					}
