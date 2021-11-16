@@ -17,9 +17,9 @@ global {
 	float yearToStep <- step / 1.0 #year;
 	float visualUpdate <- 1.0 #week; // For all but the main display
 	//	float stockCUpdateFreq <- 1.0 #day;
-	float biophysicalProcessesUpdateFreq <- 1.0 #day;
+ float biophysicalProcessesUpdateFreq <- 1.0 #day;
 	float outputsComputationFreq <- 1.0 #week;
-	float endDate <- 1.0 #month; //8.0 #month; // Dry season length
+	float endDate <- 8.0 #month; //8.0 #month; // Dry season length
 	bool batchSim <- false;
 	bool stopSim <- false;
 
@@ -111,7 +111,7 @@ global {
 		}
 
 		// Paddock instantiation
-		write "	Placing paddocks, distribution : " + parcelDistrib;
+ write "	Placing paddocks, distribution : " + parcelDistrib;
 		if parcelDistrib = "GiniVect" {
 			write "		Gini control : " + gini(vectGiniParcels);
 		}
@@ -149,7 +149,7 @@ global {
 					"Cropland")))) { // Could probably be in the loop definition...
 						create nightPaddock {
 						// Plots attribution
-							myOriginCell <- cell;
+ myOriginCell <- cell;
 							myOriginCell.overlappingPaddock <- self;
 							self.myCells <+ myOriginCell;
 							self.nightsPerCellMap <+ myOriginCell::0;

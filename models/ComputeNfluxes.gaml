@@ -12,7 +12,8 @@ import "main.gaml"
 global {
 
 // Compute nitrogen flux in a global matrix
-	map<string, float> croplandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
+ map<string, float>
+	croplandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
 	map<string, float> rangelandNFluxMatrix <- ["periodVarCellNstock"::0.0, "periodNUptake"::0.0, "periodNIntake"::0.0, "periodAtmoNFix"::0.0, "periodSoilNEmissions"::0.0];
 	map<string, map> NFluxMap <- ["croplandCells"::croplandNFluxMatrix, "rangelandCells"::rangelandNFluxMatrix, "herds"::["varHerdsNStock"::0.0]];
 
@@ -38,28 +39,28 @@ global {
 	}
 
 	// Compute global ENA indicators at the end of the simulation (Stark, 2016; Balandier, 2017, Latham, 2006)
-	float TT;
+ float TT;
 	float TST;
 	float ICR;
 	list<float> NFluxList; // TODO clean this mess
-	action computeENAIndicators {
+ action computeENAIndicators {
 		NFluxList <<+
-		[croplandNFluxMatrix["periodNUptake"], croplandNFluxMatrix["periodNIntake"], rangelandNFluxMatrix["periodNUptake"], rangelandNFluxMatrix["periodNIntake"], croplandNFluxMatrix["periodAtmoNFix"], rangelandNFluxMatrix["periodAtmoNFix"], croplandNFluxMatrix["periodSoilNEmissions"], rangelandNFluxMatrix["periodSoilNEmissions"], float(NFluxMap["herds"]["varHerdsNStock"])];
+		[croplandNFluxMatrix["periodNUptake"], croplandNFluxMatrix["periodNIntake"], rangelandNFluxMatrix["periodNUptake"], rangelandNFluxMatrix["periodNIntake"], croplandNFluxMatrix["periodAtmoNFix"], rangelandNFluxMatrix["periodAtmoNFix"], croplandNFluxMatrix["periodSoilNEmissions"], rangelandNFluxMatrix["periodSoilNEmissions"], croplandNFluxMatrix["periodVarCellNstock"], rangelandNFluxMatrix["periodVarCellNstock"], float(NFluxMap["herds"]["varHerdsNStock"])];
 
 		// TT
-		TT <- sum(croplandNFluxMatrix["periodNUptake"], croplandNFluxMatrix["periodNIntake"], rangelandNFluxMatrix["periodNUptake"], rangelandNFluxMatrix["periodNIntake"]);
+ TT <- sum(croplandNFluxMatrix["periodNUptake"], croplandNFluxMatrix["periodNIntake"], rangelandNFluxMatrix["periodNUptake"], rangelandNFluxMatrix["periodNIntake"]);
 
 		// TST
-		float cropNVarIfNeg <- croplandNFluxMatrix["periodVarCellNstock"] < 0 ? croplandNFluxMatrix["periodVarCellNstock"] : 0.0;
+ float cropNVarIfNeg <- croplandNFluxMatrix["periodVarCellNstock"] < 0 ? croplandNFluxMatrix["periodVarCellNstock"] : 0.0;
 		float rangeNVarIfNeg <- rangelandNFluxMatrix["periodVarCellNstock"] < 0 ? rangelandNFluxMatrix["periodVarCellNstock"] : 0.0;
 		float herdsNVarIfNeg <- float(NFluxMap["herds"]["varHerdsNStock"]) < 0 ? float(NFluxMap["herds"]["varHerdsNStock"]) : 0.0;
 		TST <- TT + croplandNFluxMatrix["periodAtmoNFix"] + rangelandNFluxMatrix["periodAtmoNFix"] - cropNVarIfNeg - rangeNVarIfNeg - herdsNVarIfNeg;
 
 		// ICR
-		ICR <- TT / TST;
+ ICR <- TT / TST;
 
 		// Prompt
-		write "		TT : " + TT / hectareToCell + " kgN/ha";
+ write "		TT : " + TT / hectareToCell + " kgN/ha";
 		write "		TST : " + TST / hectareToCell + " kgN/ha";
 		write "		ICR : " + ICR;
 	}

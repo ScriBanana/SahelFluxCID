@@ -53,20 +53,20 @@ experiment simulation type: gui {
 
 		}
 		//		display carbonDisplay type: java2D refresh: every(visualUpdate) {
-		//			grid secondaryGrid border: #lightgrey;
-		//			species stockFlowMecanisms aspect: carbonStock;
-		//		}
+ //			grid secondaryGrid border: #lightgrey;
+ //			species stockFlowMecanisms aspect: carbonStock;
+ //		}
 
 		//		display carbonStocksChart refresh: every(visualUpdate) {
-		//			chart "Soil organic carbon evolution" type: series {
+ //			chart "Soil organic carbon evolution" type: series {
 
 		//				data "Total stock" value: stockFlowMecanisms sum_of (each.totalCStock);
-		//				data "Labile stock" value: stockFlowMecanisms sum_of (each.labileCStock);
+ //				data "Labile stock" value: stockFlowMecanisms sum_of (each.labileCStock);
 
 		//				data "Stable stock" value: stockFlowMecanisms sum_of (each.stableCStock);
-		//			}
-		//
-		//		}
+ //			}
+ //
+ //		}
 
 	}
 

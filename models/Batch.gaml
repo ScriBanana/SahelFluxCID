@@ -38,8 +38,8 @@ global {
 
 }
 
-experiment batchICRGini autorun: true type: batch repeat: 28 until: stopSim {
-	string outputFilePathAndName <- "../outputs/SFCID_BatchOutput_h" + (giniMatrix.rows - 1) + "p" + (giniMatrix.rows - 1) + "r28l1M.csv";
+experiment batchICRGini autorun: true type: batch repeat: 26 until: stopSim {
+	string outputFilePathAndName <- "../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r28l1M.csv";
 	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 9 step: 1;
 	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 9 step: 1;
 	// Max has to be set up manually to giniMatrix.rows - 1
