@@ -244,7 +244,8 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	plotStockFlowMecanisms myStockFlowMecanisms;
 	float biomassContent min: 0.0 max: max(maxCropBiomassContent, maxRangelandBiomassContent);
 	float initialBiomassContent;
-	map<float, float> depositedOMMap; //TODO ajouter cumul pour la carte;
+	map<float, float> depositedOMMap;
+	float cumulDepositedOM;
 
 	// Colouring
 	reflex updateColour when: !nonGrazable {
