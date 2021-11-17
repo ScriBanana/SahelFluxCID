@@ -28,6 +28,9 @@ global {
 	string herdDistrib <- "NormalDist" among: ["Equity", "NormalDist", "GiniVect"];
 	list<float> vectGiniParcels;
 	list<float> vectGiniHerds;
+	float GiniP;
+	float GiniH;
+
 	// landscape parameters
 	float maxCropBiomassContentHa <- 351.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; weeds and crop residues
 	float maxRangelandBiomassContentHa <- 375.0; // kgDM/ha Achard & Banoin (2003) - palatable BM; grass and shrubs
@@ -83,7 +86,7 @@ global {
 		// Creating herds
 		write "	Creating herds, distribution : " + herdDistrib;
 		if herdDistrib = "GiniVect" {
-			write "		Gini control : " + gini(vectGiniHerds);
+			write "		Input Gini herd control : " + gini(vectGiniHerds);
 		}
 
 		if herdDistrib = "Equity" {
@@ -113,7 +116,7 @@ global {
 		// Paddock instantiation
  write "	Placing paddocks, distribution : " + parcelDistrib;
 		if parcelDistrib = "GiniVect" {
-			write "		Gini control : " + gini(vectGiniParcels);
+			write "		Input Gini parcel control : " + gini(vectGiniParcels);
 		}
 
 		int newParc <- 0;
@@ -154,6 +157,7 @@ global {
 							self.myCells <+ myOriginCell;
 							self.nightsPerCellMap <+ myOriginCell::0;
 							location <- myOriginCell.location;
+							self.paddockSize <- parcelSize;
 							if parcelSize / 2 >= min(cellHeight, cellWidth) / 2 { // TODO fix to have 4 cells parcels some day
 								ask myOriginCell neighbors_at (parcelSize / 2) where (each.cellLUSimple = "Cropland" and each.overlappingPaddock = nil) {
 									self.overlappingPaddock <- myself;
@@ -193,6 +197,9 @@ global {
 		}
 
 		write "	End of init";
+		GiniP <- gini(nightPaddock collect each.paddockSize);
+		GiniH <- gini(herd collect each.herdSize);
+		write "		Gini control - GiniP : " + GiniP + ", GiniH : " + GiniH;
 	}
 
 	// Weekly print
@@ -265,6 +272,7 @@ species nightPaddock {
 	list<landscape> myCells;
 	map<landscape, int> nightsPerCellMap;
 	herd myHerd;
+	float paddockSize;
 
 	aspect default {
 		ask myCells {

@@ -11,39 +11,44 @@ import "main.gaml"
 
 global {
 	int nbHerdsInit <- 84; // (Grillot et al, 2018)
-	float meanHerdSize <- 3.7; // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
-	float SDHerdSize <- 0.2; // TLU (Grillot et al, 2018)
-	// Behaviour
-	int wakeUpTime <- 8; // Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
-	int eveningTime <- 19;
+ float meanHerdSize <- 3.7; // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
+ float
+	SDHerdSize <- 0.2; // TLU (Grillot et al, 2018)
+ // Behaviour
+ int wakeUpTime <- 8;
+	// Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
+ int eveningTime <- 19;
 	// Time of the day (24h) at which animals come back to their sleeping spot (Own accelerometer data)
-	float herdSpeed <- 0.833;
+ float herdSpeed <- 0.833;
 	// m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
-	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
+ float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
 
 	// Zootechnical data
-	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
-	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float IIRCroplandTLU <- 10.9; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
-	float digestionLength <- 20.0 #h; // Duration of the digestion of biomass in the animals (expert knowledge)
-	float ratioExcretionIngestion <- 0.55;
+ float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
+ float
+	IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
+ float IIRCroplandTLU <- 10.9;
+	// instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
+ float digestionLength <- 20.0 #h;
+	// Duration of the digestion of biomass in the animals (expert knowledge)
+ float ratioExcretionIngestion <- 0.55;
 	// Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
 	// Paddocking
-	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
-}
+ int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
+ }
 
 species herd control: fsm skills: [moving] {
 	rgb herdColour <- rnd_color(255);
-	int herdSize; // TLU
+	int herdSize min: 1; // TLU
 
 
 	// Paddocking parameters and variables
-	nightPaddock myPaddock <- nil;
+ nightPaddock myPaddock <- nil;
 	landscape currentSleepSpot;
 
 	// Grazing parameters and variables
-	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
+ float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
 	float IIRRangelandHerd <- IIRRangelandTLU / 1000 * step / #minute * herdSize;
 	float IIRCroplandHerd <- IIRCroplandTLU / 1000 * step / #minute * herdSize;
 	map<float, float> chymeChunksMap;
@@ -52,8 +57,9 @@ species herd control: fsm skills: [moving] {
 	landscape currentCell update: one_of(landscape overlapping self);
 
 	// FSM parameters and variables
-	// Sleep time in between globals wakeUpTime and eveningTime
-	bool sleepTime <- true update: !(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
+ // Sleep time in between globals wakeUpTime and eveningTime
+ bool sleepTime <- true update:
+	!(abs(current_date.hour - (eveningTime + wakeUpTime - 1) / 2) < (eveningTime - wakeUpTime - 1) / 2);
 	landscape targetCell <- one_of(landscape where !each.nonGrazable);
 	bool isInGoodSpot <- false;
 
@@ -62,7 +68,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	//// FSM behaviour ////
-	state isGoingToSleepSpot {
+ state isGoingToSleepSpot {
 		do goto target: currentSleepSpot;
 		transition to: isSleepingInPaddock when: location overlaps currentSleepSpot.location;
 	}
@@ -82,12 +88,12 @@ species herd control: fsm skills: [moving] {
 	state isChangingSite {
 		enter {
 			targetCell <- one_of(landscape where (each.cellLUSimple = "Rangeland")); // TODO A affiner selon le DOE
-		}
+ }
 
 		do checkSpotQuality;
 
 		//do wander amplitude: 90.0;
-		do goto target: targetCell;
+ do goto target: targetCell;
 		transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isGrazing when: isInGoodSpot;
 	}
@@ -99,13 +105,14 @@ species herd control: fsm skills: [moving] {
 
 		list<landscape> cellsAround <- checkSpotQuality();
 		if currentGrazingCell.biomassContent < cellsAround mean_of each.biomassContent { // TODO Bon, à voir...
-			landscape juiciestCellAround <- one_of(cellsAround with_max_of (each.biomassContent));
+ landscape juiciestCellAround <- one_of(cellsAround with_max_of
+			(each.biomassContent));
 			currentGrazingCell <- juiciestCellAround;
 		}
 
 		do goto target: currentGrazingCell;
 		do graze(currentGrazingCell); // Add conditionnal if speed*step gets significantly reduced
-		transition to: isGoingToSleepSpot when: sleepTime;
+ transition to: isGoingToSleepSpot when: sleepTime;
 		transition to: isResting when: !hungry;
 		transition to: isChangingSite when: !isInGoodSpot;
 	}
@@ -116,19 +123,19 @@ species herd control: fsm skills: [moving] {
 	}
 
 	//// Functions ////
-	list<landscape> checkSpotQuality { // and return visible cells.
-		list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
+ list<landscape> checkSpotQuality { // and return visible cells.
+ list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
 		float goodSpotThreshold <- meanBiomassContent - biomassContentSD; // Gersie, 2020
-		isInGoodSpot <- cellsAround mean_of each.biomassContent > goodSpotThreshold ? true : false;
+ isInGoodSpot <- cellsAround mean_of each.biomassContent > goodSpotThreshold ? true : false;
 		return cellsAround;
 	}
 
 	// Change tile in the paddock parcel when maximum number of nights is reached.
-	action updatePaddock {
+ action updatePaddock {
 		myPaddock.nightsPerCellMap[currentSleepSpot] <- myPaddock.nightsPerCellMap[currentSleepSpot] + 1;
 
 		// When all tiles were occupied, reset the counter (TODO fit to reality)
-		if sum(myPaddock.nightsPerCellMap.values) = length(myPaddock.nightsPerCellMap) * maxNbNightsPerCell {
+ if sum(myPaddock.nightsPerCellMap.values) = length(myPaddock.nightsPerCellMap) * maxNbNightsPerCell {
 			ask myPaddock {
 				self.nightsPerCellMap <- [];
 				ask myCells {
@@ -156,7 +163,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	// Grange (2015), Wade (2016). Urine is computed in StockFlows.gaml
-	reflex excrete when: !empty(chymeChunksMap) and time - first(chymeChunksMap.keys) > digestionLength {
+ reflex excrete when: !empty(chymeChunksMap) and time - first(chymeChunksMap.keys) > digestionLength {
 		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * herdSize * ratioExcretionIngestion);
 		chymeChunksMap >- first(chymeChunksMap);
 	}
