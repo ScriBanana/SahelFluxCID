@@ -124,9 +124,9 @@ species herd control: fsm skills: [moving] {
 
 	//// Functions ////
  list<landscape> checkSpotQuality { // and return visible cells.
- list<landscape> cellsAround <- landscape at_distance (herdVisionRadius);
+ list<landscape> cellsAround <- landscape at_distance herdVisionRadius; // TODO Seems to cause slow down
 		float goodSpotThreshold <- meanBiomassContent - biomassContentSD; // Gersie, 2020
- isInGoodSpot <- cellsAround mean_of each.biomassContent > goodSpotThreshold ? true : false;
+ isInGoodSpot <- cellsAround mean_of each.biomassContent > goodSpotThreshold;
 		return cellsAround;
 	}
 
