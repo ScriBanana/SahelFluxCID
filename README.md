@@ -11,7 +11,7 @@ Using [GAMA Platform](https://gama-platform.org/) v. 1.8.2 (developper build [ff
 To run the model, launch from `main.gaml`. To run sensivity analysis, launch from `batch.gaml`.
 Random numbers lists used for the poster are included as a CSV file in `./includes/`. New lists and afferent Gini indexex can be generated using `GenerGini.gaml`
 
-### References cited in the code :
+## References cited in the code :
 Achard, F., Banoin, M., 2003. Fallows, forage production and nutrient transfers by livestock in Niger. Nutrient Cycling in Agroecosystems 7.
 
 Audouin, E., Odru, M., Vayssières, J., Masse, D., Lecomte, P., 2014. Reintroducing livestock to improve village-scale agricultural productivity, nutrient balance and nutrient use effciency: the case of Senegalese groundnut basin.
