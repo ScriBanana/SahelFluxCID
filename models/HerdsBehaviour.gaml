@@ -11,32 +11,30 @@ import "main.gaml"
 
 global {
 	int nbHerdsInit <- 84; // (Grillot et al, 2018)
- float meanHerdSize <- 3.7; // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
- float
-	SDHerdSize <- 0.2; // TLU (Grillot et al, 2018)
- // Behaviour
- int wakeUpTime <- 8;
+	float meanHerdSize <- 3.7; // Tropical livestock unit (TLU) - cattle and small ruminants (Grillot et al, 2018)
+	float SDHerdSize <- 0.2; // TLU (Grillot et al, 2018)
+	 // Behaviour
+	int wakeUpTime <- 8;
 	// Time of the day (24h) at which animals are released in the morning (Own accelerometer data)
- int eveningTime <- 19;
+	int eveningTime <- 19;
 	// Time of the day (24h) at which animals come back to their sleeping spot (Own accelerometer data)
- float herdSpeed <- 0.833;
+	float herdSpeed <- 0.833;
 	// m/s = 3 km/h Does not account for grazing speed due to scale. (Own GPS data)
- float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
-
+	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
+	
 	// Zootechnical data
- float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
- float
-	IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
- float IIRCroplandTLU <- 10.9;
+	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
+	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
+	float IIRCroplandTLU <- 10.9;
 	// instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
- float digestionLength <- 20.0 #h;
+	float digestionLength <- 20.0 #h;
 	// Duration of the digestion of biomass in the animals (expert knowledge)
- float ratioExcretionIngestion <- 0.55;
+	float ratioExcretionIngestion <- 0.55;
 	// Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
-
+	
 	// Paddocking
- int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
- }
+	int maxNbNightsPerCell <- 4; // Field data; TODO A PARAM selon le scale effectif; 3-4 jour en réalité
+}
 
 species herd control: fsm skills: [moving] {
 	rgb herdColour <- rnd_color(255);
@@ -153,7 +151,7 @@ species herd control: fsm skills: [moving] {
 	}
 
 	action graze (landscape cellToGraze) {
-		float eatenBiomass <- currentCell.cellLUSimple = "Rangeland" ? IIRRangelandHerd * herdSize : IIRCroplandHerd;
+		float eatenBiomass <- currentCell.cellLUSimple = "Rangeland" ? IIRRangelandHerd : IIRCroplandHerd;
 		ask cellToGraze {
 			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}
