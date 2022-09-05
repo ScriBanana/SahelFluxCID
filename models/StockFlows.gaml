@@ -67,10 +67,6 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		// Excretions (intake)
 		float periodOMIntake <- 0.0;
 		loop OMDepositDate over: reverse(myPlot.depositedOMMap.keys sort each) {
-			if OMDepositDate <= lastNitrogenUpdateDate {
-				break;
-			}
-
 			periodOMIntake <- periodOMIntake + myPlot.depositedOMMap at OMDepositDate;
 		}
 
@@ -78,7 +74,7 @@ species plotStockFlowMecanisms parallel: true { // Likely more efficient than wi
 		float periodUrineNIntake <- periodExcretionsNIntake * ratioUrineNFecesN;
 		periodNIntake <- periodExcretionsNIntake + periodUrineNIntake; // kgN/step
 		cellNFluxMatrix["periodNIntake"] <- cellNFluxMatrix["periodNIntake"] + periodNIntake;
-		myPlot.cumulDepositedOM <- myPlot.cumulDepositedOM + sum(myPlot.depositedOMMap.values);
+		myPlot.cumulDepositedOM <- myPlot.cumulDepositedOM + periodOMIntake;
 		myPlot.depositedOMMap <- [];
 		lastNitrogenUpdateDate <- time;
 
