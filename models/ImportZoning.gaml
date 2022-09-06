@@ -24,7 +24,7 @@ global {
 	geometry shape <- rectangle(4980 #m, 6140 #m); // suits for zoningLRAudouin15Diohine
 	point villageLocation <- point(3294, 2993);
 	// suits for zoningLRAudouin15Diohine
- // float meanParcelArea <- 10000.0 #m2; // Satellite survey.
+	// float meanParcelArea <- 10000.0 #m2; // Satellite survey.
 
 	// float SDParcelArea <- 10000.0 #m2; // For normal distribution. Random value
 	float meanParcelSize <- 100.0 #m; //sqrt(meanParcelArea); // Unused if Gini
@@ -39,5 +39,5 @@ global {
 	list<string> LUList <- ["Dwellings", "Lowlands", "Ponds", "Wooded savannah", "Fallows", "Rainfed crops", "Gardens"];
 	list<rgb> LUColourList <- [rgb(124, 130, 134), rgb(100, 217, 244), rgb(0, 114, 185), rgb(101, 198, 110), rgb(57, 208, 202), rgb(216, 232, 180), rgb(0, 187, 53)];
 	//point villageLocation <- centroid(world);
- }
+}
 

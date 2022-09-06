@@ -13,10 +13,10 @@ global {
 	matrix giniMatrix <- matrix(giniFile);
 	map<float, list<float>> giniMap;
 	int parcelGiniIndex <- 0; // Has to be inited
- int herdGiniIndex <- 0; // Has to be inited
- init {
+	int herdGiniIndex <- 0; // Has to be inited
+	init {
 	//	// Reform gini map
- loop matRow from: 0 to: giniMatrix.rows - 1 {
+		loop matRow from: 0 to: giniMatrix.rows - 1 {
 			list<float> sizeVect;
 			loop matCol from: 1 to: giniMatrix.columns - 1 {
 				sizeVect <+ float(giniMatrix[matCol, matRow]);
@@ -26,7 +26,7 @@ global {
 		}
 
 		// Sim init
- batchSim <- true;
+		batchSim <- true;
 		endDate <- 2.0 #month;
 		biophysicalProcessesUpdateFreq <- 1.0 #days;
 		outputsComputationFreq <- 1.0 #week;
@@ -43,7 +43,7 @@ experiment batchICRGini autorun: true type: batch repeat: 52 until: stopSim {
 	parameter "Gini index - parcel sizes" var: parcelGiniIndex min: 0 max: 4 step: 1;
 	parameter "Gini index - herd sizes" var: herdGiniIndex min: 0 max: 4 step: 1;
 	// Max has to be set up manually to giniMatrix.rows - 1
- init {
+	init {
 		write "Starting batch";
 		save ["Run index", "GiniP input", "GiniH input", "Mean TT", "SD TT", "Mean TST", "SD TST", "Mean ICR", "SD ICR", "Flux Matrix"] to: (outputFilePathAndName) type: "csv" header:
 		false rewrite: true;
@@ -53,14 +53,14 @@ experiment batchICRGini autorun: true type: batch repeat: 52 until: stopSim {
 
 	reflex updateGiniVect {
 	// Previous batch conclusion
- write "End of run number : " + runNb;
+		write "End of run number : " + runNb;
 
 		// Control on Gini indexes
- list<float> simGiniPList <- simulations collect each.GiniP;
+		list<float> simGiniPList <- simulations collect each.GiniP;
 		list<float> simGiniHList <- simulations collect each.GiniH;
 
 		// List of mean of fluxes (inelegant af)
- list<list<float>> simNFluxLists <- simulations collect each.NFluxList;
+		list<list<float>> simNFluxLists <- simulations collect each.NFluxList;
 		list<float> listMeanSimNFlux;
 		loop indFlux from: 0 to: length(simNFluxLists[0]) - 1 {
 			list<float> fluxVal;
@@ -79,17 +79,15 @@ experiment batchICRGini autorun: true type: batch repeat: 52 until: stopSim {
 		float SDICR <- standard_deviation(simulations collect each.ICR);
 
 		// Prompt
- write "	Parcel gini index : " + giniMap.keys[parcelGiniIndex] + ", herd gini index : " + giniMap.keys[herdGiniIndex] + ", mean ICR : " + meanICR;
+		write "	Parcel gini index : " + giniMap.keys[parcelGiniIndex] + ", herd gini index : " + giniMap.keys[herdGiniIndex] + ", mean ICR : " + meanICR;
 		write "	Mean flux vector : " + listMeanSimNFlux;
 
 		// Saves
 		save [runNb, giniMap.keys[parcelGiniIndex], giniMap.keys[herdGiniIndex], meanTT, SDTT, meanTST, SDTST, meanICR, SDICR, listMeanSimNFlux] to: (outputFilePathAndName) type: "csv"
 		header: false rewrite: false;
 		save [runNb, simNFluxLists] to: ("../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r52l2M_NFluxLists.csv") type: "csv" header: false rewrite: false;
-		save [runNb, simGiniPList] to: ("../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r52l2M_simGiniPList.csv") type: "csv" header: false rewrite:
-		false;
-		save [runNb, simGiniHList] to: ("../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r52l2M_simGiniHList.csv") type: "csv" header: false rewrite:
-		false;
+		save [runNb, simGiniPList] to: ("../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r52l2M_simGiniPList.csv") type: "csv" header: false rewrite: false;
+		save [runNb, simGiniHList] to: ("../outputs/SFCID_BatchOutput_h" + giniMatrix.rows + "p" + giniMatrix.rows + "r52l2M_simGiniHList.csv") type: "csv" header: false rewrite: false;
 		runNb <- runNb + 1;
 	}
 
