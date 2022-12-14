@@ -253,7 +253,7 @@ grid landscape width: gridWidth height: gridHeight parallel: true neighbors: 8 {
 	float initialBiomassContent;
 	map<float, float> depositedOMMap;
 	float cumulDepositedOM;
-
+	
 	// Colouring
 	reflex updateColour when: !nonGrazable {
 		if cellLUSimple = "Cropland" {

@@ -23,12 +23,12 @@ global {
 	float herdVisionRadius <- 20.0 #m; // (Gersie, 2020)
 
 	// Zootechnical data
-	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014)
+	float dailyIntakeRatePerTLU <- 4.65; // kgDM/TLU/day Maximum amount of biomass consumed daily. (Wade, 2016, fits with Chirat et al. 2014) Jonathan : 6.25 = 2.5 kgMS/kgPV * 250 (Paulo)
 	float IIRRangelandTLU <- 14.2; // instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
 	float IIRCroplandTLU <- 10.9;
 	// instantaneous intake rate; g DM biomass eaten per minute (Chirat et al, 2014)
 	float digestionLength <- 20.0 #h;
-	// Duration of the digestion of biomass in the animals (expert knowledge)
+	// Duration of the digestion of biomass in the animals (expert knowledge -> ref ou préciser?)
 	float ratioExcretionIngestion <- 0.55;
 	// Dung excreted over ingested biomass (dry matter). Source : Wade (2016)
 
@@ -49,7 +49,7 @@ species herd control: fsm skills: [moving] {
 	float dailyIntakeRatePerHerd <- dailyIntakeRatePerTLU * herdSize;
 	float IIRRangelandHerd <- IIRRangelandTLU / 1000 * step / #minute * herdSize;
 	float IIRCroplandHerd <- IIRCroplandTLU / 1000 * step / #minute * herdSize;
-	map<float, float> chymeChunksMap;
+	list chymeChunksMap;
 	float satietyMeter <- 0.0;
 	bool hungry <- true update: (satietyMeter <= dailyIntakeRatePerHerd);
 	landscape currentCell update: one_of(landscape overlapping self);
@@ -153,14 +153,16 @@ species herd control: fsm skills: [moving] {
 		ask cellToGraze {
 			self.biomassContent <- self.biomassContent - eatenBiomass;
 		}
-
-		chymeChunksMap <+ time::eatenBiomass;
+		chymeChunksMap <+ [time, eatenBiomass, currentCell.cellLUSimple];
 		satietyMeter <- satietyMeter + eatenBiomass;
 	}
 
 	// Grange (2015), Wade (2016). Urine is computed in StockFlows.gaml
-	reflex excrete when: !empty(chymeChunksMap) and time - first(chymeChunksMap.keys) > digestionLength {
-		currentCell.depositedOMMap <+ time::(first(chymeChunksMap.values) * herdSize * ratioExcretionIngestion);
+	reflex excrete when: !empty(chymeChunksMap) and time - float(first(chymeChunksMap)[0]) > digestionLength {
+		
+		float excretedFeces <- float(first(chymeChunksMap)[1]) * ratioExcretionIngestion;
+		
+		currentCell.depositedOMMap <+ [time, excretedFeces, first(chymeChunksMap)[2]];
 		chymeChunksMap >- first(chymeChunksMap);
 	}
 
